@@ -8,7 +8,7 @@ class UnibusDeviceConfiguration {
 public:
   UnibusDeviceConfiguration(UnibusDevice *device, uint18 base_address, uint18 reserve_space_size) :
       _device(device), _base_address(base_address), _reserved_space_size(reserve_space_size) {
-    cout << "UnibusDevice " << device->get_name() << " was registered at bus with parameters ( base_address="
+    cout << "UnibusDevice " << device->get_name() << " was registered at bus with parameters (base_address="
          << base_address << ", reserve_space_size=" << reserve_space_size << ")" << endl;
   }
 
