@@ -267,11 +267,11 @@ void CPU::set_single_value(uint16 opcode, uint16 value, bool update_pointers) {
     break;
   case 2: // Autoincrement
     if (byte_wide) {
-      this->r[address].r += update_pointers ? 1 : 0;
       _unibus->write_byte(this->r[address].r, (uint8) value);
+      this->r[address].r += update_pointers ? 1 : 0;
     } else {
-      this->r[address].r += update_pointers ? 2 : 0;
       _unibus->write_word(this->r[address].r, value);
+      this->r[address].r += update_pointers ? 2 : 0;
     }
     break;
   case 3: // Autoincrement Deferred
@@ -319,11 +319,11 @@ uint16 CPU::get_single_value(uint16 opcode, bool update_pointers) {
       return _unibus->read_word(this->r[address].r);
   case 2: // Autoincrement
     if (byte_wide) {
-      this->r[address].r += update_pointers ? 1 : 0;
       return _unibus->read_byte(this->r[address].r);
+      this->r[address].r += update_pointers ? 1 : 0;
     } else {
-      this->r[address].r += update_pointers ? 2 : 0;
       return _unibus->read_word(this->r[address].r);
+      this->r[address].r += update_pointers ? 2 : 0;
     }
   case 3: // Autoincrement Deferred
     // TODO: Implement addressing mode
