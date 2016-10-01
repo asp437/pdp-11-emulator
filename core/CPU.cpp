@@ -253,6 +253,7 @@ void CPU::set_single_value(uint16 opcode, uint16 value, bool update_pointers) {
   uint8 mode = (uint8) (opcode & 0000070) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
   uint16 index;
+  uint16 pointer;
   bool byte_wide = (bool) ((opcode & 0100000) == 0100000);
 
   switch (mode) {
@@ -275,7 +276,13 @@ void CPU::set_single_value(uint16 opcode, uint16 value, bool update_pointers) {
     }
     break;
   case 3: // Autoincrement Deferred
-    // TODO: Implement addressing mode
+    pointer = _unibus->read_word(this->r[address].r);
+    if (byte_wide) {
+      _unibus->write_byte(pointer, (uint8) value);
+    } else {
+      _unibus->write_word(pointer, value);
+    }
+    this->r[address].r += update_pointers ? 2 : 0;
     break;
   case 4: // Autodecrement
     if (byte_wide) {
@@ -287,7 +294,13 @@ void CPU::set_single_value(uint16 opcode, uint16 value, bool update_pointers) {
     }
     break;
   case 5: // Autodecrement Deferred
-    // TODO: Implement addressing mode
+    pointer = _unibus->read_word(this->r[address].r);
+    if (byte_wide) {
+      _unibus->write_byte(pointer, (uint8) value);
+    } else {
+      _unibus->write_word(pointer, value);
+    }
+    this->r[address].r -= update_pointers ? 2 : 0;
     break;
   case 6: // Index
     index = _unibus->read_word(pc.r);
@@ -298,7 +311,13 @@ void CPU::set_single_value(uint16 opcode, uint16 value, bool update_pointers) {
     }
     break;
   case 7: // Index Deferred
-    // TODO: Implement addressing mode
+    index = _unibus->read_word(pc.r);
+    pointer = _unibus->read_word(this->r[address].r + index);
+    if (byte_wide) {
+      _unibus->write_byte(pointer, (uint8) value);
+    } else {
+      _unibus->write_word(pointer, value);
+    }
     break;
   }
 }
@@ -307,6 +326,8 @@ uint16 CPU::get_single_value(uint16 opcode, bool update_pointers) {
   uint8 mode = (uint8) (opcode & 0000070) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
   uint16 index;
+  uint16 pointer;
+  uint16 value;
   bool byte_wide = (bool) ((opcode & 0100000) == 0100000);
 
   switch (mode) {
@@ -319,15 +340,22 @@ uint16 CPU::get_single_value(uint16 opcode, bool update_pointers) {
       return _unibus->read_word(this->r[address].r);
   case 2: // Autoincrement
     if (byte_wide) {
-      return _unibus->read_byte(this->r[address].r);
+      value = _unibus->read_byte(this->r[address].r);
       this->r[address].r += update_pointers ? 1 : 0;
     } else {
-      return _unibus->read_word(this->r[address].r);
+      value = _unibus->read_word(this->r[address].r);
       this->r[address].r += update_pointers ? 2 : 0;
     }
+    return value;
   case 3: // Autoincrement Deferred
-    // TODO: Implement addressing mode
-    break;
+    pointer = _unibus->read_word(this->r[address].r);
+    if (byte_wide) {
+      value = _unibus->read_byte(pointer);
+    } else {
+      value = _unibus->read_word(pointer);
+    }
+    this->r[address].r += update_pointers ? 2 : 0;
+    return value;
   case 4: // Autodecrement
     if (byte_wide) {
       this->r[address].r -= update_pointers ? 1 : 0;
@@ -337,8 +365,13 @@ uint16 CPU::get_single_value(uint16 opcode, bool update_pointers) {
       return _unibus->read_word(this->r[address].r);
     }
   case 5: // Autodecrement Deferred
-    // TODO: Implement addressing mode
-    break;
+    this->r[address].r -= update_pointers ? 2 : 0;
+    pointer = _unibus->read_word(this->r[address].r);
+    if (byte_wide) {
+      return _unibus->read_byte(pointer);
+    } else {
+      return _unibus->read_word(pointer);
+    }
   case 6: // Index
     index = _unibus->read_word(pc.r);
     if (byte_wide) {
@@ -347,7 +380,13 @@ uint16 CPU::get_single_value(uint16 opcode, bool update_pointers) {
       return _unibus->read_word(this->r[address].r + index);
     }
   case 7: // Index Deferred
-    // TODO: Implement addressing mode
+    index = _unibus->read_word(pc.r);
+    pointer = _unibus->read_word(this->r[address].r + index);
+    if (byte_wide) {
+      return _unibus->read_byte(pointer);
+    } else {
+      return _unibus->read_word(pointer);
+    }
     break;
   }
   return 0;
