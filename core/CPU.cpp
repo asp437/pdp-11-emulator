@@ -38,7 +38,7 @@ void CPU::execute_command() {
     val16 = ~get_single_value(opcode);
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
     psw.N = (uint8) (val16 >> 15);
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0105100: // COMB
     psw.V = 0;
@@ -46,7 +46,7 @@ void CPU::execute_command() {
     val8 = ~((uint8) get_single_value(opcode));
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
     psw.N = (uint8) (val8 >> 7);
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0005200: // INC
     val16 = get_single_value(opcode);
@@ -54,7 +54,7 @@ void CPU::execute_command() {
     val16++;
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
     psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0105200: // INCB
     val8 = (uint8) get_single_value(opcode);
@@ -62,7 +62,7 @@ void CPU::execute_command() {
     val8++;
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
     psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0005300: // DEC
     val16 = get_single_value(opcode);
@@ -70,7 +70,7 @@ void CPU::execute_command() {
     val16--;
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
     psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0105300: // DECB
     val8 = (uint8) get_single_value(opcode);
@@ -78,7 +78,7 @@ void CPU::execute_command() {
     val8--;
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
     psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0005400: // NEG
     val16 = get_single_value(opcode);
@@ -87,7 +87,7 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
     psw.N = (uint8) (val16 < 0 ? 1 : 0);
     psw.C = (uint8) (val16 == 0 ? 0 : 1);
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0105400: // NEGB
     val8 = (uint8) get_single_value(opcode);
@@ -96,21 +96,21 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
     psw.N = (uint8) (val8 < 0 ? 1 : 0);
     psw.C = (uint8) (val8 == 0 ? 0 : 1);
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0005700: // TST
     val16 = get_single_value(opcode);
     psw.V = psw.C = 0;
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
     psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0105700: // TSTB
     val8 = (uint8) get_single_value(opcode);
     psw.V = psw.C = 0;
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
     psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0006200: // ASR
     val16 = get_single_value(opcode);
@@ -120,7 +120,7 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
     psw.N = sign_bit;
     psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0106200: // ASRB
     val8 = (uint8) get_single_value(opcode);
@@ -130,7 +130,7 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
     psw.N = sign_bit;
     psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0006300: // ASL
     val16 = get_single_value(opcode);
@@ -139,7 +139,7 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
     psw.N = (uint8) (val16 < 0 ? 1 : 0);
     psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0106300: // ASLB
     val8 = (uint8) get_single_value(opcode);
@@ -148,7 +148,7 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
     psw.N = (uint8) (val8 < 0 ? 1 : 0);
     psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0006000: // ROR
     val16 = get_single_value(opcode);
@@ -158,7 +158,7 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
     psw.N = (uint8) (val16 < 0 ? 1 : 0);
     psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0106000: // RORB
     val8 = (uint8) get_single_value(opcode);
@@ -168,7 +168,7 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
     psw.N = (uint8) (val8 < 0 ? 1 : 0);
     psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0006100: // ROL
     val16 = get_single_value(opcode);
@@ -178,7 +178,7 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
     psw.N = (uint8) (val16 < 0 ? 1 : 0);
     psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0106100: // ROLB
     val8 = (uint8) get_single_value(opcode);
@@ -188,7 +188,7 @@ void CPU::execute_command() {
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
     psw.N = (uint8) (val8 < 0 ? 1 : 0);
     psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0000300: // SWAB
     val16 = get_single_value(opcode);
@@ -198,7 +198,7 @@ void CPU::execute_command() {
     psw.V = psw.C = 0;
     psw.N = (uint8) (tmp8 >> 7 == 1);
     psw.Z = (uint8) (tmp8 == 0 ? 1 : 0);
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0005500: // ADC
     val16 = get_single_value(opcode);
@@ -208,7 +208,7 @@ void CPU::execute_command() {
     val16 = val16 + tmp8;
     psw.N = (uint8) (val16 < 0 ? 1 : 0);
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0105500: // ADCB
     val8 = (uint8) get_single_value(opcode);
@@ -218,7 +218,7 @@ void CPU::execute_command() {
     val8 = val8 + tmp8;
     psw.N = (uint8) (val8 < 0 ? 1 : 0);
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0005600: // SBC
     val16 = get_single_value(opcode);
@@ -228,7 +228,7 @@ void CPU::execute_command() {
     val16 = val16 - tmp8;
     psw.N = (uint8) (val16 < 0 ? 1 : 0);
     psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    set_single_value(opcode, val16);
+    set_single_value(opcode, val16, false);
     break;
   case 0105600: // SBCB
     val8 = (uint8) get_single_value(opcode);
@@ -238,7 +238,7 @@ void CPU::execute_command() {
     val8 = val8 - tmp8;
     psw.N = (uint8) (val8 < 0 ? 1 : 0);
     psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    set_single_value(opcode, val8);
+    set_single_value(opcode, val8, false);
     break;
   case 0006700: // SXT
     val16 = (uint16) (psw.N == 0 ? 0 : -1);
@@ -249,9 +249,10 @@ void CPU::execute_command() {
   this->pc.r += 2;
 }
 
-void CPU::set_single_value(uint16 opcode, uint16 value) {
+void CPU::set_single_value(uint16 opcode, uint16 value, bool update_pointers) {
   uint8 mode = (uint8) (opcode & 0000070) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
+  uint16 index;
   bool byte_wide = (bool) ((opcode & 0100000) == 0100000);
 
   switch (mode) {
@@ -265,19 +266,36 @@ void CPU::set_single_value(uint16 opcode, uint16 value) {
       _unibus->write_word(this->r[address].r, value);
     break;
   case 2: // Autoincrement
-    // TODO: Implement addressing mode
+    if (byte_wide) {
+      this->r[address].r += update_pointers ? 1 : 0;
+      _unibus->write_byte(this->r[address].r, (uint8) value);
+    } else {
+      this->r[address].r += update_pointers ? 2 : 0;
+      _unibus->write_word(this->r[address].r, value);
+    }
     break;
   case 3: // Autoincrement Deferred
     // TODO: Implement addressing mode
     break;
   case 4: // Autodecrement
-    // TODO: Implement addressing mode
+    if (byte_wide) {
+      this->r[address].r -= update_pointers ? 1 : 0;
+      _unibus->write_byte(this->r[address].r, (uint8) value);
+    } else {
+      this->r[address].r -= update_pointers ? 2 : 0;
+      _unibus->write_word(this->r[address].r, value);
+    }
     break;
   case 5: // Autodecrement Deferred
     // TODO: Implement addressing mode
     break;
   case 6: // Index
-    // TODO: Implement addressing mode
+    index = _unibus->read_word(pc.r);
+    if (byte_wide) {
+      _unibus->write_byte(this->r[address].r + index, (uint8) value);
+    } else {
+      _unibus->write_word(this->r[address].r + index, value);
+    }
     break;
   case 7: // Index Deferred
     // TODO: Implement addressing mode
@@ -285,9 +303,10 @@ void CPU::set_single_value(uint16 opcode, uint16 value) {
   }
 }
 
-uint16 CPU::get_single_value(uint16 opcode) {
+uint16 CPU::get_single_value(uint16 opcode, bool update_pointers) {
   uint8 mode = (uint8) (opcode & 0000070) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
+  uint16 index;
   bool byte_wide = (bool) ((opcode & 0100000) == 0100000);
 
   switch (mode) {
@@ -299,20 +318,34 @@ uint16 CPU::get_single_value(uint16 opcode) {
     else
       return _unibus->read_word(this->r[address].r);
   case 2: // Autoincrement
-    // TODO: Implement addressing mode
-    break;
+    if (byte_wide) {
+      this->r[address].r += update_pointers ? 1 : 0;
+      return _unibus->read_byte(this->r[address].r);
+    } else {
+      this->r[address].r += update_pointers ? 2 : 0;
+      return _unibus->read_word(this->r[address].r);
+    }
   case 3: // Autoincrement Deferred
     // TODO: Implement addressing mode
     break;
   case 4: // Autodecrement
-    // TODO: Implement addressing mode
-    break;
+    if (byte_wide) {
+      this->r[address].r -= update_pointers ? 1 : 0;
+      return _unibus->read_byte(this->r[address].r);
+    } else {
+      this->r[address].r -= update_pointers ? 2 : 0;
+      return _unibus->read_word(this->r[address].r);
+    }
   case 5: // Autodecrement Deferred
     // TODO: Implement addressing mode
     break;
   case 6: // Index
-    // TODO: Implement addressing mode
-    break;
+    index = _unibus->read_word(pc.r);
+    if (byte_wide) {
+      return _unibus->read_byte(this->r[address].r + index);
+    } else {
+      return _unibus->read_word(this->r[address].r + index);
+    }
   case 7: // Index Deferred
     // TODO: Implement addressing mode
     break;

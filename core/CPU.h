@@ -30,8 +30,8 @@ public:
   CPU(Unibus *unibus);
   void execute_command();
 private:
-  void set_single_value(uint16 opcode, uint16 value);
-  uint16 get_single_value(uint16 opcode);
+  void set_single_value(uint16 opcode, uint16 value, bool update_pointers = true);
+  uint16 get_single_value(uint16 opcode, bool update_pointers = true);
 
   union {
     Register r[8];
