@@ -14,8 +14,11 @@ public:
   Memory(uint16 memory_size);
 
   virtual string get_name();
-  virtual uint16 read(uint18 address);
-  virtual void write(uint18 address, uint16 value);
+  virtual uint16 read_word(uint18 address);
+  virtual void write_word(uint18 address, uint16 value);
+  virtual uint8 read_byte(uint18 address);
+  virtual void write_byte(uint18 address, uint8 value);
+  uint16 get_memory_size();
 private:
   uint8 *_memory_array;
   uint16 _memory_size;

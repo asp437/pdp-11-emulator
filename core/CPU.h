@@ -30,6 +30,9 @@ public:
   CPU(Unibus *unibus);
   void execute_command();
 private:
+  void set_single_value(uint16 opcode, uint16 value);
+  uint16 get_single_value(uint16 opcode);
+
   union {
     Register r[8];
     struct {

@@ -33,17 +33,30 @@ bool Unibus::register_device(UnibusDevice *device, uint18 base_address, uint18 r
   return true;
 }
 
-uint16 Unibus::read(uint18 address) {
+uint16 Unibus::read_word(uint18 address) {
   // TODO: Send raw or shifted address to device???
   UnibusDeviceConfiguration *configured_device = get_registered_device(address);
-  return configured_device == nullptr ? (uint16) 0 : configured_device->get_device()->read(address);
+  return configured_device == nullptr ? (uint16) 0 : configured_device->get_device()->read_word(address);
 }
 
-uint16 Unibus::write(uint18 address, uint16 value) {
+void Unibus::write_word(uint18 address, uint16 value) {
   // TODO: Send raw or shifted address to device???
   UnibusDeviceConfiguration *configured_device = get_registered_device(address);
   if (configured_device != nullptr)
-    configured_device->get_device()->write(address, value);
+    configured_device->get_device()->write_word(address, value);
+}
+
+uint8 Unibus::read_byte(uint18 address) {
+  // TODO: Send raw or shifted address to device???
+  UnibusDeviceConfiguration *configured_device = get_registered_device(address);
+  return configured_device == nullptr ? (uint8) 0 : configured_device->get_device()->read_byte(address);
+}
+
+void Unibus::write_byte(uint18 address, uint8 value) {
+  // TODO: Send raw or shifted address to device???
+  UnibusDeviceConfiguration *configured_device = get_registered_device(address);
+  if (configured_device != nullptr)
+    configured_device->get_device()->write_byte(address, value);
 }
 
 UnibusDeviceConfiguration *Unibus::get_registered_device(uint18 address) {

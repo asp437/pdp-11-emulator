@@ -16,8 +16,10 @@ class UnibusDeviceConfiguration;
 class Unibus {
 public:
   bool register_device(UnibusDevice *device, uint18 base_address, uint18 reserve_space_size);
-  uint16 read(uint18 address);
-  uint16 write(uint18 address, uint16 value);
+  uint16 read_word(uint18 address);
+  void write_word(uint18 address, uint16 value);
+  uint8 read_byte(uint18 address);
+  void write_byte(uint18 address, uint8 value);
   static int get_magic();
 private:
   UnibusDeviceConfiguration *get_registered_device(uint18 address);
