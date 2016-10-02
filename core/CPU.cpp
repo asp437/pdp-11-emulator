@@ -3,258 +3,78 @@
 //
 
 #include "CPU.h"
+
+#include <iomanip>
+#include <ios>
+
+const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 07777700;
+
 CPU::CPU(Unibus *unibus) : _unibus(unibus) {
-  // TODO: Initialize PC and PSW
+  // TODO: Initialize PC and PSW, register all opcodes
+  register_instruction("CLR", SINGLE_OPERAND_INSTRUCTION_MASK, 0005000, &CPU::opcode_clr);
+  register_instruction("CLRB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105000, &CPU::opcode_clrb);
+
+  register_instruction("COM", SINGLE_OPERAND_INSTRUCTION_MASK, 0005100, &CPU::opcode_com);
+  register_instruction("COMB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105100, &CPU::opcode_comb);
+
+  register_instruction("INC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005200, &CPU::opcode_inc);
+  register_instruction("INCB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105200, &CPU::opcode_incb);
+
+  register_instruction("DEC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005300, &CPU::opcode_dec);
+  register_instruction("DECB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105300, &CPU::opcode_decb);
+
+  register_instruction("NEG", SINGLE_OPERAND_INSTRUCTION_MASK, 0005400, &CPU::opcode_neg);
+  register_instruction("NEGB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105400, &CPU::opcode_negb);
+
+  register_instruction("TST", SINGLE_OPERAND_INSTRUCTION_MASK, 0005700, &CPU::opcode_tst);
+  register_instruction("TSTB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105700, &CPU::opcode_tstb);
+
+  register_instruction("ASR", SINGLE_OPERAND_INSTRUCTION_MASK, 0006200, &CPU::opcode_asr);
+  register_instruction("ASRB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106200, &CPU::opcode_asrb);
+
+  register_instruction("ASL", SINGLE_OPERAND_INSTRUCTION_MASK, 0006300, &CPU::opcode_asl);
+  register_instruction("ASLB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106300, &CPU::opcode_aslb);
+
+  register_instruction("ROR", SINGLE_OPERAND_INSTRUCTION_MASK, 0006000, &CPU::opcode_ror);
+  register_instruction("RORB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106000, &CPU::opcode_rorb);
+
+  register_instruction("ROL", SINGLE_OPERAND_INSTRUCTION_MASK, 0006100, &CPU::opcode_rol);
+  register_instruction("ROLB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106100, &CPU::opcode_rolb);
+
+  register_instruction("SWAB", SINGLE_OPERAND_INSTRUCTION_MASK, 0000300, &CPU::opcode_swab);
+
+  register_instruction("ADC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005500, &CPU::opcode_adc);
+  register_instruction("ADCB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105500, &CPU::opcode_adcb);
+
+  register_instruction("SBC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005600, &CPU::opcode_sbc);
+  register_instruction("SBCB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105600, &CPU::opcode_sbcb);
+
+  register_instruction("SXT", SINGLE_OPERAND_INSTRUCTION_MASK, 0006700, &CPU::opcode_sxt);
 }
 
-void CPU::execute_command() {
-  uint16 opcode = _unibus->read_word((uint18) this->pc.r);
-  uint16 val16, tmp16;
-  uint8 val8, tmp8;
-  uint8 sign_bit;
+void CPU::register_instruction(string mnemonic,
+                               uint16 opcode_mask,
+                               uint16 opcode_signature,
+                               void (CPU::*opcode_f)(uint16)) {
+  CPUInstruction instruction;
+  instruction.mnemonic = mnemonic;
+  instruction.opcode_mask = opcode_mask;
+  instruction.opcode_signature = opcode_signature;
+  instruction.opcode_func = opcode_f;
+  cpu_instruction_set.push_back(instruction);
 
-  switch (opcode) { // TODO: Implement PDP-11 CPU instruction set
-  case 0000000: // HALT
-    break;
-  default: // Unknown one
-    cerr << "Unknown opcode" << endl;
-    break;
-  }
-
-  switch (opcode & 0777700) { // Single Operand Addressing (0xxxxDD)
-  case 0005000: // CLR
-    psw.N = psw.V = psw.C = 0;
-    psw.Z = 1;
-    set_single_value(opcode, 0);
-    break;
-  case 0105000: // CLRB
-    psw.N = psw.V = psw.C = 0;
-    psw.Z = 1;
-    set_single_value(opcode, 0);
-    break;
-  case 0005100: // COM
-    psw.V = 0;
-    psw.C = 1;
-    val16 = ~get_single_value(opcode);
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    psw.N = (uint8) (val16 >> 15);
-    set_single_value(opcode, val16, false);
-    break;
-  case 0105100: // COMB
-    psw.V = 0;
-    psw.C = 1;
-    val8 = ~((uint8) get_single_value(opcode));
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    psw.N = (uint8) (val8 >> 7);
-    set_single_value(opcode, val8, false);
-    break;
-  case 0005200: // INC
-    val16 = get_single_value(opcode);
-    psw.V = (uint8) (val16 == 077777 ? 1 : 0);
-    val16++;
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    set_single_value(opcode, val16, false);
-    break;
-  case 0105200: // INCB
-    val8 = (uint8) get_single_value(opcode);
-    psw.V = (uint8) (val8 == 077777 ? 1 : 0); // TODO: Maybe compare with 0177?
-    val8++;
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    set_single_value(opcode, val8, false);
-    break;
-  case 0005300: // DEC
-    val16 = get_single_value(opcode);
-    psw.V = (uint8) (val16 == 0100000 ? 1 : 0);
-    val16--;
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    set_single_value(opcode, val16, false);
-    break;
-  case 0105300: // DECB
-    val8 = (uint8) get_single_value(opcode);
-    psw.V = (uint8) (val8 == 0100000 ? 1 : 0); // TODO: Maybe compare with 0200?
-    val8--;
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    set_single_value(opcode, val8, false);
-    break;
-  case 0005400: // NEG
-    val16 = get_single_value(opcode);
-    val16 = (uint16) ((val16 == 0100000) ? 0100000 : -val16);
-    psw.V = (uint8) (val16 == 0100000 ? 1 : 0);
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    psw.C = (uint8) (val16 == 0 ? 0 : 1);
-    set_single_value(opcode, val16, false);
-    break;
-  case 0105400: // NEGB
-    val8 = (uint8) get_single_value(opcode);
-    val8 = (uint8) ((val8 == 0100000) ? 0100000 : -val8);
-    psw.V = (uint8) (val8 == 0100000 ? 1 : 0);
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    psw.C = (uint8) (val8 == 0 ? 0 : 1);
-    set_single_value(opcode, val8, false);
-    break;
-  case 0005700: // TST
-    val16 = get_single_value(opcode);
-    psw.V = psw.C = 0;
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    set_single_value(opcode, val16, false);
-    break;
-  case 0105700: // TSTB
-    val8 = (uint8) get_single_value(opcode);
-    psw.V = psw.C = 0;
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    set_single_value(opcode, val8, false);
-    break;
-  case 0006200: // ASR
-    val16 = get_single_value(opcode);
-    psw.C = (uint8) (val16 & 0x1);
-    sign_bit = (uint8) (val16 >> 15);
-    val16 = (((uint16) sign_bit) << 15) | (val16 >> 1);
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    psw.N = sign_bit;
-    psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val16, false);
-    break;
-  case 0106200: // ASRB
-    val8 = (uint8) get_single_value(opcode);
-    psw.C = (uint8) (val8 & 0001);
-    sign_bit = (uint8) (val8 >> 7);
-    val8 = (sign_bit << 7) | (val8 >> 1);
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    psw.N = sign_bit;
-    psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val8, false);
-    break;
-  case 0006300: // ASL
-    val16 = get_single_value(opcode);
-    psw.C = (uint8) (val16 >> 15);
-    val16 = val16 << 1;
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val16, false);
-    break;
-  case 0106300: // ASLB
-    val8 = (uint8) get_single_value(opcode);
-    psw.C = (uint8) (val8 >> 7);
-    val8 = val8 << 1;
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val8, false);
-    break;
-  case 0006000: // ROR
-    val16 = get_single_value(opcode);
-    sign_bit = psw.C;
-    psw.C = (uint8) (val16 & 0001);
-    val16 = (((uint16) sign_bit) << 15) | (val16 >> 1);
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val16, false);
-    break;
-  case 0106000: // RORB
-    val8 = (uint8) get_single_value(opcode);
-    sign_bit = psw.C;
-    psw.C = (uint8) (val8 & 0001);
-    val8 = (sign_bit << 7) | (val8 >> 1);
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val8, false);
-    break;
-  case 0006100: // ROL
-    val16 = get_single_value(opcode);
-    sign_bit = (uint8) (val16 >> 15);
-    val16 = psw.C | (val16 << 1);
-    psw.C = sign_bit;
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val16, false);
-    break;
-  case 0106100: // ROLB
-    val8 = (uint8) get_single_value(opcode);
-    sign_bit = val8 >> 7;
-    val8 = psw.C | (val8 << 1);
-    psw.C = sign_bit;
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    psw.V = psw.N ^ psw.C;
-    set_single_value(opcode, val8, false);
-    break;
-  case 0000300: // SWAB
-    val16 = get_single_value(opcode);
-    val8 = (uint8) (val16 & 0377);
-    tmp8 = (uint8) ((val16 >> 8) & 0377);
-    val16 = (((uint16) val8) << 8) | tmp8;
-    psw.V = psw.C = 0;
-    psw.N = (uint8) (tmp8 >> 7 == 1);
-    psw.Z = (uint8) (tmp8 == 0 ? 1 : 0);
-    set_single_value(opcode, val16, false);
-    break;
-  case 0005500: // ADC
-    val16 = get_single_value(opcode);
-    tmp8 = psw.C;
-    psw.C = (uint8) ((val16 == 0177777 && tmp8 == 1) ? 1 : 0);
-    psw.V = (uint8) ((val16 == 0077777 && tmp8 == 1) ? 1 : 0);
-    val16 = val16 + tmp8;
-    psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    set_single_value(opcode, val16, false);
-    break;
-  case 0105500: // ADCB
-    val8 = (uint8) get_single_value(opcode);
-    tmp8 = psw.C;
-    psw.C = (uint8) ((val8 == 0177777 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 377?
-    psw.V = (uint8) ((val8 == 0077777 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 177?
-    val8 = val8 + tmp8;
-    psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    set_single_value(opcode, val8, false);
-    break;
-  case 0005600: // SBC
-    val16 = get_single_value(opcode);
-    tmp8 = psw.C;
-    psw.C = (uint8) ((val16 == 0000000 && tmp8 == 1) ? 1 : 0);
-    psw.V = (uint8) ((val16 == 0100000) ? 1 : 0);
-    val16 = val16 - tmp8;
-    psw.N = (uint8) (val16 < 0 ? 1 : 0);
-    psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-    set_single_value(opcode, val16, false);
-    break;
-  case 0105600: // SBCB
-    val8 = (uint8) get_single_value(opcode);
-    tmp8 = psw.C;
-    psw.C = (uint8) ((val8 == 0000000 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 377?
-    psw.V = (uint8) ((val8 == 0100000) ? 1 : 0); // TODO: Maybe compare with 177?
-    val8 = val8 - tmp8;
-    psw.N = (uint8) (val8 < 0 ? 1 : 0);
-    psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-    set_single_value(opcode, val8, false);
-    break;
-  case 0006700: // SXT
-    val16 = (uint16) (psw.N == 0 ? 0 : -1);
-    psw.Z = (uint8) (psw.N == 0 ? 1 : 0);
-    set_single_value(opcode, val16);
-    break;
-  }
-  this->pc.r += 2;
+  ios_base::fmtflags cout_flags = cout.flags();
+  cout << "CPU Instruction " << setw(4) << mnemonic << " (OPCODE SIGNATURE 0" << oct << setfill('0') << setw(6)
+       << opcode_signature << ") registered." << endl;
+  cout << setfill(' ') << setw(0);
+  cout.flags(cout_flags);
 }
 
-void CPU::set_single_value(uint16 opcode, uint16 value, bool update_pointers) {
+void CPU::set_destination_value(uint16 opcode, uint16 value, bool byte_wide, bool update_pointers) {
   uint8 mode = (uint8) (opcode & 0000070) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
   uint16 index;
   uint16 pointer;
-  bool byte_wide = (bool) ((opcode & 0100000) == 0100000);
 
   switch (mode) {
   case 0: // Register
@@ -322,13 +142,12 @@ void CPU::set_single_value(uint16 opcode, uint16 value, bool update_pointers) {
   }
 }
 
-uint16 CPU::get_single_value(uint16 opcode, bool update_pointers) {
+uint16 CPU::get_destination_value(uint16 opcode, bool byte_wide, bool update_pointers) {
   uint8 mode = (uint8) (opcode & 0000070) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
   uint16 index;
   uint16 pointer;
   uint16 value;
-  bool byte_wide = (bool) ((opcode & 0100000) == 0100000);
 
   switch (mode) {
   case 0: // Register
@@ -390,4 +209,266 @@ uint16 CPU::get_single_value(uint16 opcode, bool update_pointers) {
     break;
   }
   return 0;
+}
+
+void CPU::execute_command() {
+  uint16 opcode = _unibus->read_word((uint18) this->pc.r);
+
+  for (auto instruction_it = cpu_instruction_set.begin(); instruction_it != cpu_instruction_set.end();
+       ++instruction_it) {
+    if ((opcode & instruction_it->opcode_mask) == instruction_it->opcode_signature) {
+      (this->*(instruction_it->opcode_func))(opcode);
+    }
+  }
+
+  this->pc.r += 2;
+}
+
+void CPU::opcode_clr(uint16 opcode) {
+  psw.N = psw.V = psw.C = 0;
+  psw.Z = 1;
+  set_destination_value(opcode, 0);
+}
+
+void CPU::opcode_clrb(uint16 opcode) {
+  psw.N = psw.V = psw.C = 0;
+  psw.Z = 1;
+  set_destination_value(opcode, 0, true);
+}
+
+void CPU::opcode_com(uint16 opcode) {
+  psw.V = 0;
+  psw.C = 1;
+  uint16 val16 = ~get_destination_value(opcode);
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  psw.N = (uint8) (val16 >> 15);
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_comb(uint16 opcode) {
+  psw.V = 0;
+  psw.C = 1;
+  uint8 val8 = ~((uint8) get_destination_value(opcode, true));
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  psw.N = (uint8) (val8 >> 7);
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_inc(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  psw.V = (uint8) (val16 == 077777 ? 1 : 0);
+  val16++;
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_incb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  psw.V = (uint8) (val8 == 077777 ? 1 : 0); // TODO: Maybe compare with 0177?
+  val8++;
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_dec(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  psw.V = (uint8) (val16 == 0100000 ? 1 : 0);
+  val16--;
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_decb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  psw.V = (uint8) (val8 == 0100000 ? 1 : 0); // TODO: Maybe compare with 0200?
+  val8--;
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_neg(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  val16 = (uint16) ((val16 == 0100000) ? 0100000 : -val16);
+  psw.V = (uint8) (val16 == 0100000 ? 1 : 0);
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  psw.C = (uint8) (val16 == 0 ? 0 : 1);
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_negb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  val8 = (uint8) ((val8 == 0100000) ? 0100000 : -val8);
+  psw.V = (uint8) (val8 == 0100000 ? 1 : 0);
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  psw.C = (uint8) (val8 == 0 ? 0 : 1);
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_tst(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  psw.V = psw.C = 0;
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_tstb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  psw.V = psw.C = 0;
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_asr(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  psw.C = (uint8) (val16 & 0x1);
+  uint8 sign_bit = (uint8) (val16 >> 15);
+  val16 = (((uint16) sign_bit) << 15) | (val16 >> 1);
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  psw.N = sign_bit;
+  psw.V = psw.N ^ psw.C;
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_asrb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  psw.C = (uint8) (val8 & 0001);
+  uint8 sign_bit = (uint8) (val8 >> 7);
+  val8 = (sign_bit << 7) | (val8 >> 1);
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  psw.N = sign_bit;
+  psw.V = psw.N ^ psw.C;
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_asl(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  psw.C = (uint8) (val16 >> 15);
+  val16 = val16 << 1;
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  psw.V = psw.N ^ psw.C;
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_aslb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  psw.C = (uint8) (val8 >> 7);
+  val8 = val8 << 1;
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  psw.V = psw.N ^ psw.C;
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_ror(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  uint8 sign_bit = psw.C;
+  psw.C = (uint8) (val16 & 0001);
+  val16 = (((uint16) sign_bit) << 15) | (val16 >> 1);
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  psw.V = psw.N ^ psw.C;
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_rorb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  uint8 sign_bit = psw.C;
+  psw.C = (uint8) (val8 & 0001);
+  val8 = (sign_bit << 7) | (val8 >> 1);
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  psw.V = psw.N ^ psw.C;
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_rol(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  uint8 sign_bit = (uint8) (val16 >> 15);
+  val16 = psw.C | (val16 << 1);
+  psw.C = sign_bit;
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  psw.V = psw.N ^ psw.C;
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_rolb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  uint8 sign_bit = val8 >> 7;
+  val8 = psw.C | (val8 << 1);
+  psw.C = sign_bit;
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  psw.V = psw.N ^ psw.C;
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_swab(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  uint8 val8 = (uint8) (val16 & 0377);
+  uint8 tmp8 = (uint8) ((val16 >> 8) & 0377);
+  val16 = (((uint16) val8) << 8) | tmp8;
+  psw.V = psw.C = 0;
+  psw.N = (uint8) (tmp8 >> 7 == 1);
+  psw.Z = (uint8) (tmp8 == 0 ? 1 : 0);
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_adc(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  uint8 tmp8 = psw.C;
+  psw.C = (uint8) ((val16 == 0177777 && tmp8 == 1) ? 1 : 0);
+  psw.V = (uint8) ((val16 == 0077777 && tmp8 == 1) ? 1 : 0);
+  val16 = val16 + tmp8;
+  psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_adcb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  uint8 tmp8 = psw.C;
+  psw.C = (uint8) ((val8 == 0177777 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 377?
+  psw.V = (uint8) ((val8 == 0077777 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 177?
+  val8 = val8 + tmp8;
+  psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_sbc(uint16 opcode) {
+  uint16 val16 = get_destination_value(opcode);
+  uint8 tmp8 = psw.C;
+  psw.C = (uint8) ((val16 == 0000000 && tmp8 == 1) ? 1 : 0);
+  psw.V = (uint8) ((val16 == 0100000) ? 1 : 0);
+  val16 = val16 - tmp8;
+  psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  set_destination_value(opcode, val16, false, false);
+}
+
+void CPU::opcode_sbcb(uint16 opcode) {
+  uint8 val8 = (uint8) get_destination_value(opcode, true);
+  uint8 tmp8 = psw.C;
+  psw.C = (uint8) ((val8 == 0000000 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 377?
+  psw.V = (uint8) ((val8 == 0100000) ? 1 : 0); // TODO: Maybe compare with 177?
+  val8 = val8 - tmp8;
+  psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  set_destination_value(opcode, val8, true, false);
+}
+
+void CPU::opcode_sxt(uint16 opcode) {
+  uint16 val16 = (uint16) (psw.N == 0 ? 0 : -1);
+  psw.Z = (uint8) (psw.N == 0 ? 1 : 0);
+  set_destination_value(opcode, val16);
 }
