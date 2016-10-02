@@ -51,6 +51,14 @@ private:
   void set_source_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);
   uint16 get_source_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);
 
+  void stack_push(uint16 value);
+  uint16 stack_pop();
+
+  uint8 is_negative16(uint16 value) { return (uint8) (value >> 15); }
+  uint8 is_negative8(uint8 value) { return (uint8) (value >> 7); }
+  uint8 is_zero16(uint16 value) { return (uint8) (value == 0 ? 1 : 0); }
+  uint8 is_zero8(uint8 value) { return (uint8) (value == 0 ? 1 : 0); }
+
   // Single Operand Instructions
   void opcode_clr(uint16 opcode);
   void opcode_clrb(uint16 opcode);

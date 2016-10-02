@@ -18,9 +18,8 @@ const uint16 CONDITION_CODE_INSTRUCTION_MASK = (const uint16) 0177740;
 const uint16 BRANCHING_OFFSET_INSTRUCTION_MASK = (const uint16) 0177400;
 const uint16 BRANCHING_OFFSET_MASK = (const uint16) 0000377;
 
-
 CPU::CPU(Unibus *unibus) : _unibus(unibus) {
-  // TODO: Initialize PC and PSW, register all opcodes
+  // TODO: Initialize PC and PSW
   // Single Operand Instructions
   register_instruction("CLR", SINGLE_OPERAND_INSTRUCTION_MASK, 0005000, &CPU::opcode_clr);
   register_instruction("CLRB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105000, &CPU::opcode_clrb);
@@ -102,50 +101,17 @@ CPU::CPU(Unibus *unibus) : _unibus(unibus) {
   register_instruction("RESET", NO_OPERANDS_INSTRUCTION_MASK, 0000005, &CPU::opcode_reset);
   register_instruction("MFPI", SINGLE_OPERAND_INSTRUCTION_MASK, 0006500, &CPU::opcode_mfpi);
   register_instruction("MTPI", SINGLE_OPERAND_INSTRUCTION_MASK, 0006600, &CPU::opcode_mtpi);
-  register_instruction("NOP",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000240,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("CLN",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000250,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("CLZ",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000244,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("CLV",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000242,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("CLC",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000241,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("CCC",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000257,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("SEN",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000270,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("SEZ",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000264,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("SEV",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000262,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("SEC",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000261,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
-  register_instruction("SCC",
-                       NO_OPERANDS_INSTRUCTION_MASK,
-                       0000277,
-                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("NOP", NO_OPERANDS_INSTRUCTION_MASK, 0000240, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("CLN", NO_OPERANDS_INSTRUCTION_MASK, 0000250, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("CLZ", NO_OPERANDS_INSTRUCTION_MASK, 0000244, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("CLV", NO_OPERANDS_INSTRUCTION_MASK, 0000242, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("CLC", NO_OPERANDS_INSTRUCTION_MASK, 0000241, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("CCC", NO_OPERANDS_INSTRUCTION_MASK, 0000257, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("SEN", NO_OPERANDS_INSTRUCTION_MASK, 0000270, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("SEZ", NO_OPERANDS_INSTRUCTION_MASK, 0000264, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("SEV", NO_OPERANDS_INSTRUCTION_MASK, 0000262, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("SEC", NO_OPERANDS_INSTRUCTION_MASK, 0000261, &CPU::opcode_cco); // Used for disasm mnemonic
+  register_instruction("SCC", NO_OPERANDS_INSTRUCTION_MASK, 0000277, &CPU::opcode_cco); // Used for disasm mnemonic
   register_instruction("CCO", CONDITION_CODE_INSTRUCTION_MASK, 0000240, &CPU::opcode_cco);
 
   cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
@@ -337,6 +303,16 @@ uint16 CPU::get_source_value(uint16 opcode, bool byte_wide, bool update_pointers
   return get_value(mode, address, byte_wide, update_pointers);
 }
 
+void CPU::stack_push(uint16 value) {
+  _unibus->write_word(_sp.r, value);
+  _sp.r -= 2;
+}
+
+uint16 CPU::stack_pop() {
+  _sp.r += 2;
+  return _unibus->read_word(_sp.r);
+}
+
 void CPU::execute_command() {
   uint16 opcode = _unibus->read_word((uint18) this->_pc.r);
   _pc.r += 2; // Already move forward from opcode
@@ -350,7 +326,6 @@ void CPU::execute_command() {
     }
   }
 
-  // TODO: Increment wrt. index operand addressing
   this->_pc.r += _pc_step;
 }
 
@@ -370,8 +345,8 @@ void CPU::opcode_com(uint16 opcode) {
   _psw.V = 0;
   _psw.C = 1;
   uint16 val16 = ~get_destination_value(opcode);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val16 >> 15);
+  _psw.Z = is_zero16(val16);
+  _psw.N = is_negative16(val16);
   set_destination_value(opcode, val16, false, false);
 }
 
@@ -379,8 +354,8 @@ void CPU::opcode_comb(uint16 opcode) {
   _psw.V = 0;
   _psw.C = 1;
   uint8 val8 = ~((uint8) get_destination_value(opcode, true));
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val8 >> 7);
+  _psw.Z = is_zero8(val8);
+  _psw.N = is_negative8(val8);
   set_destination_value(opcode, val8, true, false);
 }
 
@@ -388,8 +363,8 @@ void CPU::opcode_inc(uint16 opcode) {
   uint16 val16 = get_destination_value(opcode);
   _psw.V = (uint8) (val16 == 077777 ? 1 : 0);
   val16++;
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  _psw.Z = is_zero16(val16);
+  _psw.N = is_negative16(val16);
   set_destination_value(opcode, val16, false, false);
 }
 
@@ -397,8 +372,8 @@ void CPU::opcode_incb(uint16 opcode) {
   uint8 val8 = (uint8) get_destination_value(opcode, true);
   _psw.V = (uint8) (val8 == 077777 ? 1 : 0); // TODO: Maybe compare with 0177?
   val8++;
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  _psw.Z = is_zero8(val8);
+  _psw.N = is_negative8(val8);
   set_destination_value(opcode, val8, true, false);
 }
 
@@ -406,8 +381,8 @@ void CPU::opcode_dec(uint16 opcode) {
   uint16 val16 = get_destination_value(opcode);
   _psw.V = (uint8) (val16 == 0100000 ? 1 : 0);
   val16--;
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  _psw.Z = is_zero16(val16);
+  _psw.N = is_negative16(val16);
   set_destination_value(opcode, val16, false, false);
 }
 
@@ -415,8 +390,8 @@ void CPU::opcode_decb(uint16 opcode) {
   uint8 val8 = (uint8) get_destination_value(opcode, true);
   _psw.V = (uint8) (val8 == 0100000 ? 1 : 0); // TODO: Maybe compare with 0200?
   val8--;
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  _psw.Z = is_zero8(val8);
+  _psw.N = is_negative8(val8);
   set_destination_value(opcode, val8, true, false);
 }
 
@@ -424,8 +399,8 @@ void CPU::opcode_neg(uint16 opcode) {
   uint16 val16 = get_destination_value(opcode);
   val16 = (uint16) ((val16 == 0100000) ? 0100000 : -val16);
   _psw.V = (uint8) (val16 == 0100000 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  _psw.Z = is_zero16(val16);
+  _psw.N = is_negative16(val16);
   _psw.C = (uint8) (val16 == 0 ? 0 : 1);
   set_destination_value(opcode, val16, false, false);
 }
@@ -434,8 +409,8 @@ void CPU::opcode_negb(uint16 opcode) {
   uint8 val8 = (uint8) get_destination_value(opcode, true);
   val8 = (uint8) ((val8 == 0100000) ? 0100000 : -val8);
   _psw.V = (uint8) (val8 == 0100000 ? 1 : 0);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  _psw.Z = is_zero8(val8);
+  _psw.N = is_negative8(val8);
   _psw.C = (uint8) (val8 == 0 ? 0 : 1);
   set_destination_value(opcode, val8, true, false);
 }
@@ -443,16 +418,16 @@ void CPU::opcode_negb(uint16 opcode) {
 void CPU::opcode_tst(uint16 opcode) {
   uint16 val16 = get_destination_value(opcode);
   _psw.V = _psw.C = 0;
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  _psw.Z = is_zero16(val16);
+  _psw.N = is_negative16(val16);
   set_destination_value(opcode, val16, false, false);
 }
 
 void CPU::opcode_tstb(uint16 opcode) {
   uint8 val8 = (uint8) get_destination_value(opcode, true);
   _psw.V = _psw.C = 0;
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  _psw.Z = is_zero8(val8);
+  _psw.N = is_negative8(val8);
   set_destination_value(opcode, val8, true, false);
 }
 
@@ -461,7 +436,7 @@ void CPU::opcode_asr(uint16 opcode) {
   _psw.C = (uint8) (val16 & 0x1);
   uint8 sign_bit = (uint8) (val16 >> 15);
   val16 = (((uint16) sign_bit) << 15) | (val16 >> 1);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.Z = is_zero16(val16);
   _psw.N = sign_bit;
   _psw.V = _psw.N ^ _psw.C;
   set_destination_value(opcode, val16, false, false);
@@ -472,7 +447,7 @@ void CPU::opcode_asrb(uint16 opcode) {
   _psw.C = (uint8) (val8 & 0001);
   uint8 sign_bit = (uint8) (val8 >> 7);
   val8 = (sign_bit << 7) | (val8 >> 1);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  _psw.Z = is_zero8(val8);
   _psw.N = sign_bit;
   _psw.V = _psw.N ^ _psw.C;
   set_destination_value(opcode, val8, true, false);
@@ -482,8 +457,8 @@ void CPU::opcode_asl(uint16 opcode) {
   uint16 val16 = get_destination_value(opcode);
   _psw.C = (uint8) (val16 >> 15);
   val16 = val16 << 1;
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  _psw.Z = is_zero16(val16);
+  _psw.N = is_negative16(val16);
   _psw.V = _psw.N ^ _psw.C;
   set_destination_value(opcode, val16, false, false);
 }
@@ -492,8 +467,8 @@ void CPU::opcode_aslb(uint16 opcode) {
   uint8 val8 = (uint8) get_destination_value(opcode, true);
   _psw.C = (uint8) (val8 >> 7);
   val8 = val8 << 1;
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  _psw.Z = is_zero8(val8);
+  _psw.N = is_negative8(val8);
   _psw.V = _psw.N ^ _psw.C;
   set_destination_value(opcode, val8, true, false);
 }
@@ -503,8 +478,8 @@ void CPU::opcode_ror(uint16 opcode) {
   uint8 sign_bit = _psw.C;
   _psw.C = (uint8) (val16 & 0001);
   val16 = (((uint16) sign_bit) << 15) | (val16 >> 1);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  _psw.Z = is_zero16(val16);
+  _psw.N = is_negative16(val16);
   _psw.V = _psw.N ^ _psw.C;
   set_destination_value(opcode, val16, false, false);
 }
@@ -514,8 +489,8 @@ void CPU::opcode_rorb(uint16 opcode) {
   uint8 sign_bit = _psw.C;
   _psw.C = (uint8) (val8 & 0001);
   val8 = (sign_bit << 7) | (val8 >> 1);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  _psw.Z = is_zero8(val8);
+  _psw.N = is_negative8(val8);
   _psw.V = _psw.N ^ _psw.C;
   set_destination_value(opcode, val8, true, false);
 }
@@ -525,8 +500,8 @@ void CPU::opcode_rol(uint16 opcode) {
   uint8 sign_bit = (uint8) (val16 >> 15);
   val16 = _psw.C | (val16 << 1);
   _psw.C = sign_bit;
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
+  _psw.Z = is_zero16(val16);
+  _psw.N = is_negative16(val16);
   _psw.V = _psw.N ^ _psw.C;
   set_destination_value(opcode, val16, false, false);
 }
@@ -536,8 +511,8 @@ void CPU::opcode_rolb(uint16 opcode) {
   uint8 sign_bit = val8 >> 7;
   val8 = _psw.C | (val8 << 1);
   _psw.C = sign_bit;
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
+  _psw.Z = is_zero8(val8);
+  _psw.N = is_negative8(val8);
   _psw.V = _psw.N ^ _psw.C;
   set_destination_value(opcode, val8, true, false);
 }
@@ -548,8 +523,8 @@ void CPU::opcode_swab(uint16 opcode) {
   uint8 tmp8 = (uint8) ((val16 >> 8) & 0377);
   val16 = (((uint16) val8) << 8) | tmp8;
   _psw.V = _psw.C = 0;
-  _psw.N = (uint8) (tmp8 >> 7 == 1);
-  _psw.Z = (uint8) (tmp8 == 0 ? 1 : 0);
+  _psw.N = is_negative8(tmp8);
+  _psw.Z = is_zero8(tmp8);
   set_destination_value(opcode, val16, false, false);
 }
 
@@ -559,8 +534,8 @@ void CPU::opcode_adc(uint16 opcode) {
   _psw.C = (uint8) ((val16 == 0177777 && tmp8 == 1) ? 1 : 0);
   _psw.V = (uint8) ((val16 == 0077777 && tmp8 == 1) ? 1 : 0);
   val16 = val16 + tmp8;
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   set_destination_value(opcode, val16, false, false);
 }
 
@@ -570,8 +545,8 @@ void CPU::opcode_adcb(uint16 opcode) {
   _psw.C = (uint8) ((val8 == 0177777 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 377?
   _psw.V = (uint8) ((val8 == 0077777 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 177?
   val8 = val8 + tmp8;
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  _psw.N = is_negative8(val8);
+  _psw.Z = is_zero8(val8);
   set_destination_value(opcode, val8, true, false);
 }
 
@@ -581,8 +556,8 @@ void CPU::opcode_sbc(uint16 opcode) {
   _psw.C = (uint8) ((val16 == 0000000 && tmp8 == 1) ? 1 : 0);
   _psw.V = (uint8) ((val16 == 0100000) ? 1 : 0);
   val16 = val16 - tmp8;
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   set_destination_value(opcode, val16, false, false);
 }
 
@@ -592,30 +567,30 @@ void CPU::opcode_sbcb(uint16 opcode) {
   _psw.C = (uint8) ((val8 == 0000000 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 377?
   _psw.V = (uint8) ((val8 == 0100000) ? 1 : 0); // TODO: Maybe compare with 177?
   val8 = val8 - tmp8;
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  _psw.N = is_negative8(val8);
+  _psw.Z = is_zero8(val8);
   set_destination_value(opcode, val8, true, false);
 }
 
 void CPU::opcode_sxt(uint16 opcode) {
   uint16 val16 = (uint16) (_psw.N == 0 ? 0 : -1);
-  _psw.Z = (uint8) (_psw.N == 0 ? 1 : 0);
+  _psw.Z = is_zero8(_psw.N);
   set_destination_value(opcode, val16);
 }
 
 void CPU::opcode_mov(uint16 opcode) {
   uint16 val16 = get_source_value(opcode);
   set_destination_value(opcode, val16);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   _psw.V = 0;
 }
 
 void CPU::opcode_movb(uint16 opcode) {
   uint8 val8 = (uint8) get_source_value(opcode, true);
   set_destination_value(opcode, val8, true);
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  _psw.N = is_negative8(val8);
+  _psw.Z = is_zero8(val8);
   _psw.V = 0;
 }
 
@@ -623,8 +598,8 @@ void CPU::opcode_cmp(uint16 opcode) {
   uint16 src_val16 = get_source_value(opcode);
   uint16 dst_val16 = get_destination_value(opcode);
   uint16 val16 = src_val16 - dst_val16;
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   _psw.V = (uint8) (signbit(src_val16) != signbit(dst_val16) && signbit(val16) == signbit(dst_val16) ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val16) - dst_val16) != val16 ? 1 : 0);
 }
@@ -633,8 +608,8 @@ void CPU::opcode_cmpb(uint16 opcode) {
   uint8 src_val8 = (uint8) get_source_value(opcode, true);
   uint8 dst_val8 = (uint8) get_destination_value(opcode, true);
   uint8 val8 = src_val8 - dst_val8;
-  _psw.N = (uint8) (val8 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  _psw.N = is_negative8(val8);
+  _psw.Z = is_zero8(val8);
   _psw.V = (uint8) (signbit(src_val8) != signbit(dst_val8) && signbit(val8) == signbit(dst_val8) ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val8) - dst_val8) != val8 ? 1 : 0);
 }
@@ -644,8 +619,8 @@ void CPU::opcode_add(uint16 opcode) {
   uint16 dst_val16 = get_destination_value(opcode);
   uint16 val16 = src_val16 + dst_val16;
   set_destination_value(opcode, val16, false, false);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   _psw.V = (uint8) (signbit(src_val16) == signbit(dst_val16) && signbit(val16) != signbit(dst_val16) ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val16) + dst_val16) != val16 ? 1 : 0);
 }
@@ -655,8 +630,8 @@ void CPU::opcode_sub(uint16 opcode) {
   uint16 dst_val16 = get_destination_value(opcode);
   uint16 val16 = src_val16 - dst_val16;
   set_destination_value(opcode, val16, false, false);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   _psw.V = (uint8) (signbit(src_val16) != signbit(dst_val16) && signbit(val16) == signbit(dst_val16) ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val16) - dst_val16) != val16 ? 1 : 0);
 }
@@ -665,8 +640,8 @@ void CPU::opcode_bit(uint16 opcode) {
   uint16 src_val16 = get_source_value(opcode);
   uint16 dst_val16 = get_destination_value(opcode);
   uint16 val16 = src_val16 & dst_val16;
-  _psw.N = (uint8) ((val16 & 0x7000) == 0x7000 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   _psw.V = (uint8) 0;
 }
 
@@ -674,8 +649,8 @@ void CPU::opcode_bitb(uint16 opcode) {
   uint8 src_val8 = (uint8) get_source_value(opcode, true);
   uint8 dst_val8 = (uint8) get_destination_value(opcode, true);
   uint8 val8 = src_val8 & dst_val8;
-  _psw.N = (uint8) ((val8 & 0x70) == 0x70 ? 1 : 0);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  _psw.N = is_negative8(val8);
+  _psw.Z = is_zero8(val8);
   _psw.V = (uint8) 0;
 }
 
@@ -684,8 +659,8 @@ void CPU::opcode_bic(uint16 opcode) {
   uint16 dst_val16 = get_destination_value(opcode);
   uint16 val16 = ~src_val16 & dst_val16;
   set_destination_value(opcode, val16, false, false);
-  _psw.N = (uint8) ((val16 & 0x7000) == 0x7000 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   _psw.V = (uint8) 0;
 }
 
@@ -694,8 +669,8 @@ void CPU::opcode_bicb(uint16 opcode) {
   uint8 dst_val8 = (uint8) get_destination_value(opcode, true);
   uint8 val8 = ~src_val8 & dst_val8;
   set_destination_value(opcode, val8, true, false);
-  _psw.N = (uint8) ((val8 & 0x70) == 0x70 ? 1 : 0);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  _psw.N = is_negative8(val8);
+  _psw.Z = is_zero8(val8);
   _psw.V = (uint8) 0;
 }
 
@@ -704,8 +679,8 @@ void CPU::opcode_bis(uint16 opcode) {
   uint16 dst_val16 = get_destination_value(opcode);
   uint16 val16 = src_val16 | dst_val16;
   set_destination_value(opcode, val16, false, false);
-  _psw.N = (uint8) ((val16 & 0x7000) == 0x7000 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   _psw.V = (uint8) 0;
 }
 
@@ -714,8 +689,8 @@ void CPU::opcode_bisb(uint16 opcode) {
   uint8 dst_val8 = (uint8) get_destination_value(opcode, true);
   uint8 val8 = src_val8 | dst_val8;
   set_destination_value(opcode, val8, true, false);
-  _psw.N = (uint8) ((val8 & 0x70) == 0x70 ? 1 : 0);
-  _psw.Z = (uint8) (val8 == 0 ? 1 : 0);
+  _psw.N = is_negative8(val8);
+  _psw.Z = is_zero8(val8);
   _psw.V = (uint8) 0;
 }
 
@@ -724,8 +699,8 @@ void CPU::opcode_xor(uint16 opcode) {
   uint16 dst_val16 = get_destination_value(opcode);
   uint16 val16 = src_val16 ^dst_val16;
   set_destination_value(opcode, val16, false, false);
-  _psw.N = (uint8) (val16 < 0 ? 1 : 0);
-  _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
+  _psw.N = is_negative16(val16);
+  _psw.Z = is_zero16(val16);
   _psw.V = (uint8) 0;
 }
 
@@ -832,7 +807,7 @@ void CPU::opcode_blo(uint16 opcode) {
 
 void CPU::opcode_jmp(uint16 opcode) {
   if ((opcode & 0000070) >> 3) {
-    return; // TODO: Illegal instruction condition
+    throw new logic_error("Illegal JMP instruction");
   }
   uint16 val16 = get_destination_value(opcode);
   _pc.r = val16;
@@ -841,8 +816,7 @@ void CPU::opcode_jmp(uint16 opcode) {
 void CPU::opcode_jsr(uint16 opcode) {
   uint16 tmp16 = get_destination_value(opcode);
   uint16 reg_n = (uint16) ((opcode >> 6) & 07);
-  _unibus->write_word(_sp.r, _r[reg_n].r);
-  _sp.r -= 2;
+  stack_push(_r[reg_n].r);
   _r[reg_n].r = _pc.r;
   _pc.r = tmp16;
 }
@@ -850,8 +824,7 @@ void CPU::opcode_jsr(uint16 opcode) {
 void CPU::opcode_rts(uint16 opcode) {
   uint16 reg_n = (uint16) (opcode & 07);
   _pc.r = _r[reg_n].r;
-  _r[reg_n].r = _unibus->read_word(_sp.r);
-  _sp.r += 2;
+  _r[reg_n].r = stack_pop();
 }
 
 void CPU::opcode_mark(uint16 opcode) {
@@ -870,53 +843,41 @@ void CPU::opcode_sob(uint16 opcode) {
 }
 
 void CPU::opcode_emt(uint16 opcode) { // TODO: Check this instruction
-  _unibus->write_word(_sp.r, _psw.ps);
-  _sp.r -= 2;
-  _unibus->write_word(_sp.r, _pc.r);
-  _sp.r -= 2;
+  stack_push(_psw.ps);
+  stack_push(_pc.r);
   _pc.r = _unibus->read_word(030);
   _psw.ps = (uint8) _unibus->read_word(032);
 }
 
 void CPU::opcode_trap(uint16 opcode) { // TODO: Check this instruction
-  _unibus->write_word(_sp.r, _psw.ps);
-  _sp.r -= 2;
-  _unibus->write_word(_sp.r, _pc.r);
-  _sp.r -= 2;
+  stack_push(_psw.ps);
+  stack_push(_pc.r);
   _pc.r = _unibus->read_word(034);
   _psw.ps = (uint8) _unibus->read_word(036);
 }
 
 void CPU::opcode_bpt(uint16 opcode) { // TODO: Check this instruction
-  _unibus->write_word(_sp.r, _psw.ps);
-  _sp.r -= 2;
-  _unibus->write_word(_sp.r, _pc.r);
-  _sp.r -= 2;
+  stack_push(_psw.ps);
+  stack_push(_pc.r);
   _pc.r = _unibus->read_word(014);
   _psw.ps = (uint8) _unibus->read_word(016);
 }
 
 void CPU::opcode_iot(uint16 opcode) { // TODO: Check this instruction
-  _unibus->write_word(_sp.r, _psw.ps);
-  _sp.r -= 2;
-  _unibus->write_word(_sp.r, _pc.r);
-  _sp.r -= 2;
+  stack_push(_psw.ps);
+  stack_push(_pc.r);
   _pc.r = _unibus->read_word(020);
   _psw.ps = (uint8) _unibus->read_word(022);
 }
 
 void CPU::opcode_rti(uint16 opcode) { // TODO: Check this instruction
-  _pc.r = _unibus->read_word(_sp.r);
-  _sp.r += 2;
-  _psw.ps = (uint8) _unibus->read_word(_sp.r);
-  _sp.r += 2;
+  _pc.r = stack_pop();
+  _psw.ps = (uint8) stack_pop();
 }
 
 void CPU::opcode_rtt(uint16 opcode) { // TODO: Check this instruction
-  _pc.r = _unibus->read_word(_sp.r);
-  _sp.r += 2;
-  _psw.ps = (uint8) _unibus->read_word(_sp.r);
-  _sp.r += 2;
+  _pc.r = stack_pop();
+  _psw.ps = (uint8) stack_pop();
 }
 
 void CPU::opcode_halt(uint16 opcode) {
@@ -933,19 +894,17 @@ void CPU::opcode_reset(uint16 opcode) {
 
 void CPU::opcode_mfpi(uint16 opcode) { // TODO: Check this opode
   uint16 tmp = get_destination_value(opcode);
-  _unibus->write_word(_sp.r, tmp);
-  _sp.r -= 2;
-  _psw.N = (uint8) ((tmp < 0) ? 1 : 0);
-  _psw.Z = (uint8) ((tmp == 0) ? 1 : 0);
+  stack_push(tmp);
+  _psw.N = is_negative16(tmp);
+  _psw.Z = is_zero16(tmp);
   _psw.V = 0;
 }
 
 void CPU::opcode_mtpi(uint16 opcode) { // TODO: Check this opode
-  uint16 tmp = _unibus->read_word(_sp.r);
-  _sp.r += 2;
+  uint16 tmp = stack_pop();
   set_destination_value(opcode, tmp);
-  _psw.N = (uint8) ((tmp < 0) ? 1 : 0);
-  _psw.Z = (uint8) ((tmp == 0) ? 1 : 0);
+  _psw.N = is_negative16(tmp);
+  _psw.Z = is_zero16(tmp);
   _psw.V = 0;
 }
 
