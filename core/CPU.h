@@ -114,6 +114,7 @@ private:
   void opcode_blo(uint16 opcode);
   void opcode_jmp(uint16 opcode);
 
+  // Subroutine Instructions
   void opcode_jsr(uint16 opcode);
   void opcode_rts(uint16 opcode);
   void opcode_mark(uint16 opcode);
@@ -124,6 +125,14 @@ private:
   void opcode_iot(uint16 opcode);
   void opcode_rti(uint16 opcode);
   void opcode_rtt(uint16 opcode);
+
+  // Miscellaneous Instructions
+  void opcode_halt(uint16 opcode);
+  void opcode_wait(uint16 opcode);
+  void opcode_reset(uint16 opcode);
+  void opcode_mfpi(uint16 opcode);
+  void opcode_mtpi(uint16 opcode);
+  void opcode_cco(uint16 opcode); // Condition code operators/NOP
 
   union {
     Register _r[8];

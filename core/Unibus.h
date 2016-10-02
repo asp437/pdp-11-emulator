@@ -20,6 +20,8 @@ public:
   void write_word(uint18 address, uint16 value);
   uint8 read_byte(uint18 address);
   void write_byte(uint18 address, uint8 value);
+
+  void set_init_line(uint ms);
   static int get_magic();
 private:
   UnibusDeviceConfiguration *get_registered_device(uint18 address);

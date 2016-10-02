@@ -14,6 +14,7 @@ const uint16 DOUBLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0170000;
 const uint16 REGISTER_ONLY_INSTRUCTION_MASK = (const uint16) 0177770;
 const uint16 REGISTER_OPERAND_INSTRUCTION_MASK = (const uint16) 0177000;
 const uint16 NO_OPERANDS_INSTRUCTION_MASK = (const uint16) 0177777;
+const uint16 CONDITION_CODE_INSTRUCTION_MASK = (const uint16) 0177740;
 const uint16 BRANCHING_OFFSET_INSTRUCTION_MASK = (const uint16) 0177400;
 const uint16 BRANCHING_OFFSET_MASK = (const uint16) 0000377;
 
@@ -94,6 +95,58 @@ CPU::CPU(Unibus *unibus) : _unibus(unibus) {
   register_instruction("IOT", NO_OPERANDS_INSTRUCTION_MASK, 0000004, &CPU::opcode_iot);
   register_instruction("RTI", NO_OPERANDS_INSTRUCTION_MASK, 0000002, &CPU::opcode_rti);
   register_instruction("RTT", NO_OPERANDS_INSTRUCTION_MASK, 0000006, &CPU::opcode_rtt);
+
+  // Miscellaneous Instructions
+  register_instruction("HALT", NO_OPERANDS_INSTRUCTION_MASK, 0000000, &CPU::opcode_halt);
+  register_instruction("WAIT", NO_OPERANDS_INSTRUCTION_MASK, 0000001, &CPU::opcode_wait);
+  register_instruction("RESET", NO_OPERANDS_INSTRUCTION_MASK, 0000005, &CPU::opcode_reset);
+  register_instruction("MFPI", SINGLE_OPERAND_INSTRUCTION_MASK, 0006500, &CPU::opcode_mfpi);
+  register_instruction("MTPI", SINGLE_OPERAND_INSTRUCTION_MASK, 0006600, &CPU::opcode_mtpi);
+  register_instruction("NOP",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000240,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("CLN",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000250,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("CLZ",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000244,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("CLV",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000242,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("CLC",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000241,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("CCC",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000257,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("SEN",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000270,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("SEZ",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000264,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("SEV",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000262,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("SEC",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000261,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("SCC",
+                       NO_OPERANDS_INSTRUCTION_MASK,
+                       0000277,
+                       &CPU::opcode_cco); // Used for disasm mnemonic extracting
+  register_instruction("CCO", CONDITION_CODE_INSTRUCTION_MASK, 0000240, &CPU::opcode_cco);
 
   cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
 }
@@ -293,6 +346,7 @@ void CPU::execute_command() {
     // TODO: Optimize execution, combine opcodes wrt. masks
     if ((opcode & instruction_it->opcode_mask) == instruction_it->opcode_signature) {
       (this->*(instruction_it->opcode_func))(opcode);
+      break;
     }
   }
 
@@ -863,4 +917,46 @@ void CPU::opcode_rtt(uint16 opcode) { // TODO: Check this instruction
   _sp.r += 2;
   _psw.ps = (uint8) _unibus->read_word(_sp.r);
   _sp.r += 2;
+}
+
+void CPU::opcode_halt(uint16 opcode) {
+  // TODO: Implement HALT instruction
+}
+
+void CPU::opcode_wait(uint16 opcode) {
+  // TODO: Implement WAIT instruction
+}
+
+void CPU::opcode_reset(uint16 opcode) {
+  _unibus->set_init_line(10);
+}
+
+void CPU::opcode_mfpi(uint16 opcode) { // TODO: Check this opode
+  uint16 tmp = get_destination_value(opcode);
+  _unibus->write_word(_sp.r, tmp);
+  _sp.r -= 2;
+  _psw.N = (uint8) ((tmp < 0) ? 1 : 0);
+  _psw.Z = (uint8) ((tmp == 0) ? 1 : 0);
+  _psw.V = 0;
+}
+
+void CPU::opcode_mtpi(uint16 opcode) { // TODO: Check this opode
+  uint16 tmp = _unibus->read_word(_sp.r);
+  _sp.r += 2;
+  set_destination_value(opcode, tmp);
+  _psw.N = (uint8) ((tmp < 0) ? 1 : 0);
+  _psw.Z = (uint8) ((tmp == 0) ? 1 : 0);
+  _psw.V = 0;
+}
+
+void CPU::opcode_cco(uint16 opcode) {
+  uint8 val = (uint8) ((opcode >> 4) & 1);
+  if ((opcode & 0000001) == 0000001)
+    _psw.C = val;
+  if ((opcode & 0000002) == 0000002)
+    _psw.V = val;
+  if ((opcode & 0000004) == 0000004)
+    _psw.Z = val;
+  if ((opcode & 0000010) == 0000010)
+    _psw.N = val;
 }
