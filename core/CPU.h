@@ -91,6 +91,26 @@ private:
   void opcode_bisb(uint16 opcode);
   void opcode_xor(uint16 opcode);
 
+  // Program Control Instructions
+  void opcode_br(uint16 opcode);
+  void opcode_bne(uint16 opcode);
+  void opcode_beq(uint16 opcode);
+  void opcode_bpl(uint16 opcode);
+  void opcode_bmi(uint16 opcode);
+  void opcode_bvc(uint16 opcode);
+  void opcode_bvs(uint16 opcode);
+  void opcode_bcc(uint16 opcode);
+  void opcode_bcs(uint16 opcode);
+  void opcode_bge(uint16 opcode);
+  void opcode_blt(uint16 opcode);
+  void opcode_bgt(uint16 opcode);
+  void opcode_ble(uint16 opcode);
+  void opcode_bhi(uint16 opcode);
+  void opcode_blos(uint16 opcode);
+  void opcode_bhis(uint16 opcode);
+  void opcode_blo(uint16 opcode);
+  void opcode_jmp(uint16 opcode);
+
   union {
     Register _r[8];
     struct {

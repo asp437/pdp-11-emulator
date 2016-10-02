@@ -13,6 +13,7 @@ const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0177700;
 const uint16 DOUBLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0170000;
 const uint16 REGISTER_OPERAND_INSTRUCTION_MASK = (const uint16) 0177000;
 const uint16 BRANCHING_OFFSET_INSTRUCTION_MASK = (const uint16) 0177400;
+const uint16 BRANCHING_OFFSET_MASK = (const uint16) 0000377;
 
 CPU::CPU(Unibus *unibus) : _unibus(unibus) {
   // TODO: Initialize PC and PSW, register all opcodes
@@ -58,6 +59,26 @@ CPU::CPU(Unibus *unibus) : _unibus(unibus) {
   register_instruction("BIS", DOUBLE_OPERAND_INSTRUCTION_MASK, 0050000, &CPU::opcode_bis);
   register_instruction("BISB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0150000, &CPU::opcode_bisb);
   register_instruction("XOR", REGISTER_OPERAND_INSTRUCTION_MASK, 0074000, &CPU::opcode_xor);
+
+  // Program Control Instructions
+  register_instruction("BR", BRANCHING_OFFSET_INSTRUCTION_MASK, 0000400, &CPU::opcode_br);
+  register_instruction("BNE", BRANCHING_OFFSET_INSTRUCTION_MASK, 0001000, &CPU::opcode_bne);
+  register_instruction("BEQ", BRANCHING_OFFSET_INSTRUCTION_MASK, 0001400, &CPU::opcode_beq);
+  register_instruction("BPL", BRANCHING_OFFSET_INSTRUCTION_MASK, 0100000, &CPU::opcode_bpl);
+  register_instruction("BMI", BRANCHING_OFFSET_INSTRUCTION_MASK, 0100400, &CPU::opcode_bmi);
+  register_instruction("BVC", BRANCHING_OFFSET_INSTRUCTION_MASK, 0102000, &CPU::opcode_bvc);
+  register_instruction("BVS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0102400, &CPU::opcode_bvs);
+  register_instruction("BCC", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103000, &CPU::opcode_bcc);
+  register_instruction("BCS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103400, &CPU::opcode_bcs);
+  register_instruction("BGE", BRANCHING_OFFSET_INSTRUCTION_MASK, 0002000, &CPU::opcode_bge);
+  register_instruction("BLT", BRANCHING_OFFSET_INSTRUCTION_MASK, 0002400, &CPU::opcode_blt);
+  register_instruction("BGT", BRANCHING_OFFSET_INSTRUCTION_MASK, 0003000, &CPU::opcode_bgt);
+  register_instruction("BLE", BRANCHING_OFFSET_INSTRUCTION_MASK, 0003400, &CPU::opcode_ble);
+  register_instruction("BHI", BRANCHING_OFFSET_INSTRUCTION_MASK, 0101000, &CPU::opcode_bhi);
+  register_instruction("BLOS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0101400, &CPU::opcode_blos);
+  register_instruction("BHIS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103000, &CPU::opcode_bhis);
+  register_instruction("BLO", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103400, &CPU::opcode_blo);
+  register_instruction("JMP", SINGLE_OPERAND_INSTRUCTION_MASK, 0000100, &CPU::opcode_jmp);
 
   cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
 }
@@ -637,4 +658,113 @@ void CPU::opcode_xor(uint16 opcode) {
   _psw.N = (uint8) (val16 < 0 ? 1 : 0);
   _psw.Z = (uint8) (val16 == 0 ? 1 : 0);
   _psw.V = (uint8) 0;
+}
+
+void CPU::opcode_br(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bne(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.Z == 0)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_beq(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.Z == 1)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bpl(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.N == 0)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bmi(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.N == 1)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bvc(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.V == 0)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bvs(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.V == 1)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bcc(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.C == 0)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bcs(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.C == 1)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bge(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.V == _psw.N)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_blt(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.V ^ _psw.N == 1)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bgt(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.V == _psw.N && _psw.Z == 0)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_ble(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.V ^ _psw.N == 1 && _psw.Z == 0)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bhi(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.C == 0 && _psw.Z == 0)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_blos(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.C == 1 || _psw.Z == 1)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_bhis(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.C == 0)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_blo(uint16 opcode) {
+  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  if (_psw.C == 1)
+    _pc.r = _pc.r + (offset << 1);
+}
+
+void CPU::opcode_jmp(uint16 opcode) {
+  if ((opcode & 0000070) >> 3) {
+    return; // TODO: Illegal instruction condition
+  }
+  uint16 val16 = get_destination_value(opcode);
+  _pc.r = val16;
 }
