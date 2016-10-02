@@ -92,22 +92,23 @@ private:
   void opcode_xor(uint16 opcode);
 
   union {
-    Register r[8];
+    Register _r[8];
     struct {
-      Register r0;
-      Register r1;
-      Register r2;
-      Register r3;
-      Register r4;
-      Register r5;
-      Register sp;
-      Register pc;
+      Register _r0;
+      Register _r1;
+      Register _r2;
+      Register _r3;
+      Register _r4;
+      Register _r5;
+      Register _sp;
+      Register _pc;
     };
   };
-  PSW psw;
+  PSW _psw;
   Unibus *_unibus;
+  int _pc_step; // In bytes
 
-  vector<CPUInstruction> cpu_instruction_set;
+  vector<CPUInstruction> _instruction_set;
 };
 
 #endif //PDP_11_EMULATOR_CPU_H
