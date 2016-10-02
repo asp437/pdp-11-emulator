@@ -11,9 +11,12 @@
 // TODO: Write common flags check macorss/function
 const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0177700;
 const uint16 DOUBLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0170000;
+const uint16 REGISTER_ONLY_INSTRUCTION_MASK = (const uint16) 0177770;
 const uint16 REGISTER_OPERAND_INSTRUCTION_MASK = (const uint16) 0177000;
+const uint16 NO_OPERANDS_INSTRUCTION_MASK = (const uint16) 0177777;
 const uint16 BRANCHING_OFFSET_INSTRUCTION_MASK = (const uint16) 0177400;
 const uint16 BRANCHING_OFFSET_MASK = (const uint16) 0000377;
+
 
 CPU::CPU(Unibus *unibus) : _unibus(unibus) {
   // TODO: Initialize PC and PSW, register all opcodes
@@ -79,6 +82,18 @@ CPU::CPU(Unibus *unibus) : _unibus(unibus) {
   register_instruction("BHIS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103000, &CPU::opcode_bhis);
   register_instruction("BLO", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103400, &CPU::opcode_blo);
   register_instruction("JMP", SINGLE_OPERAND_INSTRUCTION_MASK, 0000100, &CPU::opcode_jmp);
+
+  // Subroutine Instructions
+  register_instruction("JSR", REGISTER_OPERAND_INSTRUCTION_MASK, 0004000, &CPU::opcode_jsr);
+  register_instruction("RTS", REGISTER_ONLY_INSTRUCTION_MASK, 0000200, &CPU::opcode_rts);
+  register_instruction("MARK", SINGLE_OPERAND_INSTRUCTION_MASK, 0006400, &CPU::opcode_mark);
+  register_instruction("SOB", REGISTER_OPERAND_INSTRUCTION_MASK, 0077000, &CPU::opcode_sob);
+  register_instruction("EMT", BRANCHING_OFFSET_INSTRUCTION_MASK, 0104000, &CPU::opcode_emt);
+  register_instruction("TRAP", BRANCHING_OFFSET_INSTRUCTION_MASK, 0104400, &CPU::opcode_trap);
+  register_instruction("BPT", NO_OPERANDS_INSTRUCTION_MASK, 0000003, &CPU::opcode_bpt);
+  register_instruction("IOT", NO_OPERANDS_INSTRUCTION_MASK, 0000004, &CPU::opcode_iot);
+  register_instruction("RTI", NO_OPERANDS_INSTRUCTION_MASK, 0000002, &CPU::opcode_rti);
+  register_instruction("RTT", NO_OPERANDS_INSTRUCTION_MASK, 0000006, &CPU::opcode_rtt);
 
   cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
 }
@@ -767,4 +782,85 @@ void CPU::opcode_jmp(uint16 opcode) {
   }
   uint16 val16 = get_destination_value(opcode);
   _pc.r = val16;
+}
+
+void CPU::opcode_jsr(uint16 opcode) {
+  uint16 tmp16 = get_destination_value(opcode);
+  uint16 reg_n = (uint16) ((opcode >> 6) & 07);
+  _unibus->write_word(_sp.r, _r[reg_n].r);
+  _sp.r -= 2;
+  _r[reg_n].r = _pc.r;
+  _pc.r = tmp16;
+}
+
+void CPU::opcode_rts(uint16 opcode) {
+  uint16 reg_n = (uint16) (opcode & 07);
+  _pc.r = _r[reg_n].r;
+  _r[reg_n].r = _unibus->read_word(_sp.r);
+  _sp.r += 2;
+}
+
+void CPU::opcode_mark(uint16 opcode) {
+  uint16 nn = (uint16) (opcode & 077);
+  _sp.r = _sp.r + (nn << 1);
+  _pc.r = _r[5].r;
+  _r[5].r = _unibus->read_word(_sp.r);
+}
+
+void CPU::opcode_sob(uint16 opcode) {
+  uint16 offset = (uint16) (opcode & 077);
+  uint16 reg_n = (uint16) ((opcode >> 6) & 07);
+  _r[reg_n].r -= 1;
+  if (_r[reg_n].r != 0)
+    _pc.r = _pc.r - (offset << 1);
+}
+
+void CPU::opcode_emt(uint16 opcode) { // TODO: Check this instruction
+  _unibus->write_word(_sp.r, _psw.ps);
+  _sp.r -= 2;
+  _unibus->write_word(_sp.r, _pc.r);
+  _sp.r -= 2;
+  _pc.r = _unibus->read_word(030);
+  _psw.ps = (uint8) _unibus->read_word(032);
+}
+
+void CPU::opcode_trap(uint16 opcode) { // TODO: Check this instruction
+  _unibus->write_word(_sp.r, _psw.ps);
+  _sp.r -= 2;
+  _unibus->write_word(_sp.r, _pc.r);
+  _sp.r -= 2;
+  _pc.r = _unibus->read_word(034);
+  _psw.ps = (uint8) _unibus->read_word(036);
+}
+
+void CPU::opcode_bpt(uint16 opcode) { // TODO: Check this instruction
+  _unibus->write_word(_sp.r, _psw.ps);
+  _sp.r -= 2;
+  _unibus->write_word(_sp.r, _pc.r);
+  _sp.r -= 2;
+  _pc.r = _unibus->read_word(014);
+  _psw.ps = (uint8) _unibus->read_word(016);
+}
+
+void CPU::opcode_iot(uint16 opcode) { // TODO: Check this instruction
+  _unibus->write_word(_sp.r, _psw.ps);
+  _sp.r -= 2;
+  _unibus->write_word(_sp.r, _pc.r);
+  _sp.r -= 2;
+  _pc.r = _unibus->read_word(020);
+  _psw.ps = (uint8) _unibus->read_word(022);
+}
+
+void CPU::opcode_rti(uint16 opcode) { // TODO: Check this instruction
+  _pc.r = _unibus->read_word(_sp.r);
+  _sp.r += 2;
+  _psw.ps = (uint8) _unibus->read_word(_sp.r);
+  _sp.r += 2;
+}
+
+void CPU::opcode_rtt(uint16 opcode) { // TODO: Check this instruction
+  _pc.r = _unibus->read_word(_sp.r);
+  _sp.r += 2;
+  _psw.ps = (uint8) _unibus->read_word(_sp.r);
+  _sp.r += 2;
 }

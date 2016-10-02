@@ -10,13 +10,16 @@
 
 class CPU;
 
-struct PSW {
-  uint8 I:3, // Interrupt priority level
-      T:1, // Trap flag
-      N:1, // Sign flag
-      Z:1, // Zero flag
-      V:1, // Overflow flag
-      C:1; // Carry flag
+union PSW {
+  uint8 ps;
+  struct {
+    uint8 I:3, // Interrupt priority level
+        T:1, // Trap flag
+        N:1, // Sign flag
+        Z:1, // Zero flag
+        V:1, // Overflow flag
+        C:1; // Carry flag
+  };
 };
 
 union Register {
@@ -110,6 +113,17 @@ private:
   void opcode_bhis(uint16 opcode);
   void opcode_blo(uint16 opcode);
   void opcode_jmp(uint16 opcode);
+
+  void opcode_jsr(uint16 opcode);
+  void opcode_rts(uint16 opcode);
+  void opcode_mark(uint16 opcode);
+  void opcode_sob(uint16 opcode);
+  void opcode_emt(uint16 opcode);
+  void opcode_trap(uint16 opcode);
+  void opcode_bpt(uint16 opcode);
+  void opcode_iot(uint16 opcode);
+  void opcode_rti(uint16 opcode);
+  void opcode_rtt(uint16 opcode);
 
   union {
     Register _r[8];
