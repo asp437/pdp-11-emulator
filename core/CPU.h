@@ -41,8 +41,12 @@ public:
 private:
   void register_instruction(string mnemonic, uint16 opcode_mask, uint16 opcode_signature, void(CPU::*opcode_f)(uint16));
 
+  void set_value(uint16 mode, uint16 address, uint16 value, bool byte_wide, bool update_pointers);
+  uint16 get_value(uint16 mode, uint16 address, bool byte_wide, bool update_pointers);
   void set_destination_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);
   uint16 get_destination_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);
+  void set_source_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);
+  uint16 get_source_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);
 
   // Single Operand Instructions
   void opcode_clr(uint16 opcode);
@@ -71,6 +75,21 @@ private:
   void opcode_sbc(uint16 opcode);
   void opcode_sbcb(uint16 opcode);
   void opcode_sxt(uint16 opcode);
+
+  // Double Operand Instructions
+  void opcode_mov(uint16 opcode);
+  void opcode_movb(uint16 opcode);
+  void opcode_cmp(uint16 opcode);
+  void opcode_cmpb(uint16 opcode);
+  void opcode_add(uint16 opcode);
+  void opcode_sub(uint16 opcode);
+  void opcode_bit(uint16 opcode);
+  void opcode_bitb(uint16 opcode);
+  void opcode_bic(uint16 opcode);
+  void opcode_bicb(uint16 opcode);
+  void opcode_bis(uint16 opcode);
+  void opcode_bisb(uint16 opcode);
+  void opcode_xor(uint16 opcode);
 
   union {
     Register r[8];
