@@ -7,13 +7,18 @@
 
 #include "../common.h"
 
+class Unibus;
+
 class UnibusDevice {
 public:
+  virtual ~UnibusDevice() {};
   virtual string get_name() = 0;
-  virtual uint16 read_word(uint18 address) = 0;
-  virtual void write_word(uint18 address, uint16 value) = 0;
-  virtual uint8 read_byte(uint18 address) = 0;
-  virtual void write_byte(uint18 address, uint8 value) = 0;
+  virtual void register_unibus(Unibus *unibus) = 0;
+  virtual void reset() = 0;
+  virtual uint16 read_word(uint18 address, uint18 base_address) = 0;
+  virtual void write_word(uint18 address, uint18 base_address, uint16 value) = 0;
+  virtual uint8 read_byte(uint18 address, uint18 base_address) = 0;
+  virtual void write_byte(uint18 address, uint18 base_address, uint8 value) = 0;
 };
 
 #endif //PDP_11_EMULATOR_UNIBUSDEVICE_H
