@@ -182,7 +182,12 @@ void CPU::register_instruction(string mnemonic,
   cout.flags(cout_flags);
 }
 
-void CPU::set_value(uint8 mode, uint8 address, uint16 value, bool byte_wide, bool update_pointers) {
+void CPU::set_value(uint8 mode,
+                    uint8 address,
+                    uint16 value,
+                    bool byte_wide,
+                    bool update_pointers,
+                    uint16 index_word_offset) {
   uint16 index;
   uint16 pointer;
 
@@ -233,7 +238,7 @@ void CPU::set_value(uint8 mode, uint8 address, uint16 value, bool byte_wide, boo
     this->_r[address].r -= update_pointers ? 2 : 0;
     break;
   case 6: // Index
-    index = _unibus->read_word(_pc.r);
+    index = _unibus->read_word(_pc.r + index_word_offset);
     if (update_pointers)
       _pc_step += 2;
     if (byte_wide) {
@@ -243,7 +248,7 @@ void CPU::set_value(uint8 mode, uint8 address, uint16 value, bool byte_wide, boo
     }
     break;
   case 7: // Index Deferred
-    index = _unibus->read_word(_pc.r);
+    index = _unibus->read_word(_pc.r + index_word_offset);
     pointer = _unibus->read_word(this->_r[address].r + index);
     if (update_pointers)
       _pc_step += 2;
@@ -257,7 +262,7 @@ void CPU::set_value(uint8 mode, uint8 address, uint16 value, bool byte_wide, boo
   }
 }
 
-uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_pointers) {
+uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_pointers, uint16 index_word_offset) {
   uint16 index;
   uint16 pointer;
   uint16 value;
@@ -305,7 +310,7 @@ uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_poi
       return _unibus->read_word(pointer);
     }
   case 6: // Index
-    index = _unibus->read_word(_pc.r);
+    index = _unibus->read_word(_pc.r + index_word_offset);
     if (update_pointers)
       _pc_step += 2;
     if (byte_wide) {
@@ -314,7 +319,7 @@ uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_poi
       return _unibus->read_word(this->_r[address].r + index);
     }
   case 7: // Index Deferred
-    index = _unibus->read_word(_pc.r);
+    index = _unibus->read_word(_pc.r + index_word_offset);
     pointer = _unibus->read_word(this->_r[address].r + index);
     if (update_pointers)
       _pc_step += 2;
@@ -330,25 +335,27 @@ uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_poi
 void CPU::set_destination_value(uint16 opcode, uint16 value, bool byte_wide, bool update_pointers) {
   uint8 mode = ((uint8) (opcode & 0000070)) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
-  set_value(mode, address, value, byte_wide, update_pointers);
+  uint16 index_step = (uint16) ((opcode & 0070000) != 0 ? 2 : 0); // Double Operand Instructions check
+  set_value(mode, address, value, byte_wide, update_pointers, index_step);
 }
 
 uint16 CPU::get_destination_value(uint16 opcode, bool byte_wide, bool update_pointers) {
   uint8 mode = ((uint8) (opcode & 0000070)) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
-  return get_value(mode, address, byte_wide, update_pointers);
+  uint16 index_step = (uint16) ((opcode & 0070000) != 0 ? 2 : 0); // Double Operand Instructions check
+  return get_value(mode, address, byte_wide, update_pointers, index_step);
 }
 
 void CPU::set_source_value(uint16 opcode, uint16 value, bool byte_wide, bool update_pointers) {
   uint8 mode = (uint8) ((opcode & 0007000) >> 9);
   uint8 address = (uint8) (opcode & 0000700);
-  set_value(mode, address, value, byte_wide, update_pointers);
+  set_value(mode, address, value, byte_wide, update_pointers, 0);
 }
 
 uint16 CPU::get_source_value(uint16 opcode, bool byte_wide, bool update_pointers) {
   uint8 mode = (uint8) ((opcode & 0007000) >> 9);
   uint8 address = (uint8) (opcode & 0000700);
-  return get_value(mode, address, byte_wide, update_pointers);
+  return get_value(mode, address, byte_wide, update_pointers, 0);
 }
 
 void CPU::stack_push(uint16 value) {
@@ -365,7 +372,7 @@ void CPU::execute() {
   if (_waiting)
     return;
   uint16 opcode = _unibus->read_word((uint18) this->_pc.r);
-  _pc.r += 2; // Already move forward from opcode
+  _pc.r += 2; // Immediately move forward from opcode
   _pc_step = 0;
   for (auto instruction_it = _instruction_set.begin(); instruction_it != _instruction_set.end();
        ++instruction_it) {
