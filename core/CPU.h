@@ -11,9 +11,10 @@
 class CPU;
 
 union PSW {
-  uint8 ps;
+  uint16 ps;
   struct {
-    uint8 I:3, // Interrupt priority level
+    uint8 :8, // Most significant 8 bits not used
+        I:3, // Interrupt priority level
         T:1, // Trap flag
         N:1, // Sign flag
         Z:1, // Zero flag
@@ -37,10 +38,22 @@ struct CPUInstruction {
   void (CPU::*opcode_func)(uint16);
 };
 
-class CPU {
+class CPU : public UnibusDevice {
 public:
-  CPU(Unibus *unibus);
+  CPU();
+  virtual ~CPU();
+
+  string get_name() override;
+  void register_unibus(Unibus *unibus) override;
+  void reset() override;
+  uint16 read_word(uint18 address, uint18 base_address) override;
+  void write_word(uint18 address, uint18 base_address, uint16 value) override;
+  uint8 read_byte(uint18 address, uint18 base_address) override;
+  void write_byte(uint18 address, uint18 base_address, uint8 value) override;
   void execute_command();
+
+  static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
+  static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 0177700;
 private:
   void register_instruction(string mnemonic, uint16 opcode_mask, uint16 opcode_signature, void(CPU::*opcode_f)(uint16));
 

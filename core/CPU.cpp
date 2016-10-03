@@ -15,8 +15,7 @@ const uint16 CONDITION_CODE_INSTRUCTION_MASK = (const uint16) 0177740;
 const uint16 BRANCHING_OFFSET_INSTRUCTION_MASK = (const uint16) 0177400;
 const uint16 BRANCHING_OFFSET_MASK = (const uint16) 0000377;
 
-CPU::CPU(Unibus *unibus) : _unibus(unibus) {
-  // TODO: Initialize PC and PSW
+CPU::CPU() {
   // Single Operand Instructions
   register_instruction("CLR", SINGLE_OPERAND_INSTRUCTION_MASK, 0005000, &CPU::opcode_clr);
   register_instruction("CLRB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105000, &CPU::opcode_clrb);
@@ -110,8 +109,59 @@ CPU::CPU(Unibus *unibus) : _unibus(unibus) {
   register_instruction("SEC", NO_OPERANDS_INSTRUCTION_MASK, 0000261, &CPU::opcode_cco); // Used for disasm mnemonic
   register_instruction("SCC", NO_OPERANDS_INSTRUCTION_MASK, 0000277, &CPU::opcode_cco); // Used for disasm mnemonic
   register_instruction("CCO", CONDITION_CODE_INSTRUCTION_MASK, 0000240, &CPU::opcode_cco);
-
+  
   cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
+
+  CPU::reset();
+}
+
+CPU::~CPU() {
+  _instruction_set.clear();
+  _unibus = nullptr;
+  memset(_r, 0, sizeof(_r));
+  _pc_step = 0;
+}
+
+string CPU::get_name() {
+  return "CPU";
+}
+
+void CPU::register_unibus(Unibus* unibus) {
+  this->_unibus = unibus;
+}
+
+void CPU::reset() {
+  // TODO: Initialize PC and PSW
+  _psw.ps = 0;
+  memset(_r, 0, sizeof(_r));
+}
+
+uint16 CPU::read_word(uint18 address, uint18 base_address) {
+  if (address >= BASE_MEM_MAP_SEGMENT_ADDRESS && address < BASE_MEM_MAP_SEGMENT_ADDRESS + 020) {
+    uint8 reg_n = (address - 0177700) >> 1;
+    return _r[reg_n].r;
+  } else if (address == 0177776)
+    return _psw.ps;
+  else
+    throw new runtime_error("Wrong memory address inside CPU Memory Mapping segment");
+}
+
+void CPU::write_word(uint18 address, uint18 base_address, uint16 value) {
+  if (address >= 0177700 && address < 0177720) {
+    uint8 reg_n = (address - 0177700) >> 1;
+    _r[reg_n].r = value;
+  } else if (address == 0177776)
+    _psw.ps = value;
+  else
+    throw new runtime_error("Wrong memory address inside CPU Memory Mapping segment");
+}
+
+uint8 CPU::read_byte(uint18 address, uint18 base_address) {
+  throw new runtime_error("CPU doesn't support byte reading");
+}
+
+void CPU::write_byte(uint18 address, uint18 base_address, uint8 value) {
+  throw new runtime_error("CPU doesn't support byte writing");
 }
 
 void CPU::register_instruction(string mnemonic,
@@ -126,7 +176,7 @@ void CPU::register_instruction(string mnemonic,
   _instruction_set.push_back(instruction);
 
   ios_base::fmtflags cout_flags = cout.flags();
-  cout << "CPU Instruction " << setw(4) << mnemonic << " (OPCODE SIGNATURE 0" << oct << setfill('0') << setw(6)
+  cout << "CPU Instruction " << setw(5) << mnemonic << " (OPCODE SIGNATURE " << oct << setfill('0') << setw(7)
        << opcode_signature << ") registered." << endl;
   cout << setfill(' ') << setw(0);
   cout.flags(cout_flags);
