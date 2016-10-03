@@ -110,10 +110,12 @@ CPU::CPU() {
   register_instruction("SEC", NO_OPERANDS_INSTRUCTION_MASK, 0000261, &CPU::opcode_cco); // Used for disasm mnemonic
   register_instruction("SCC", NO_OPERANDS_INSTRUCTION_MASK, 0000277, &CPU::opcode_cco); // Used for disasm mnemonic
   register_instruction("CCO", CONDITION_CODE_INSTRUCTION_MASK, 0000240, &CPU::opcode_cco);
-  
-  cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
 
-  CPU::reset();
+  cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
+  _waiting = false;
+  // TODO: Initialize PC and PSW
+  _psw.ps = 0;
+  memset(_r, 0, sizeof(_r));
 }
 
 CPU::~CPU() {
@@ -127,14 +129,11 @@ string CPU::get_name() {
   return "Central Processing Unit";
 }
 
-void CPU::register_unibus(Unibus* unibus) {
+void CPU::register_unibus(Unibus *unibus) {
   this->_unibus = unibus;
 }
 
 void CPU::reset() {
-  // TODO: Initialize PC and PSW
-  _psw.ps = 0;
-  memset(_r, 0, sizeof(_r));
 }
 
 uint16 CPU::read_word(uint18 address, uint18 base_address) {
@@ -254,8 +253,7 @@ void CPU::set_value(uint8 mode, uint8 address, uint16 value, bool byte_wide, boo
       _unibus->write_word(pointer, value);
     }
     break;
-  default:
-    throw new runtime_error("Wrong addressing mode");
+  default:throw new runtime_error("Wrong addressing mode");
   }
 }
 
@@ -325,8 +323,7 @@ uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_poi
     } else {
       return _unibus->read_word(pointer);
     }
-  default:
-    throw new runtime_error("Wrong addressing mode");
+  default:throw new runtime_error("Wrong addressing mode");
   }
 }
 
@@ -364,7 +361,9 @@ uint16 CPU::stack_pop() {
   return _unibus->read_word(_sp.r);
 }
 
-void CPU::execute_command() {
+void CPU::execute() {
+  if (_waiting)
+    return;
   uint16 opcode = _unibus->read_word((uint18) this->_pc.r);
   _pc.r += 2; // Already move forward from opcode
   _pc_step = 0;
@@ -378,6 +377,15 @@ void CPU::execute_command() {
   }
 
   this->_pc.r += _pc_step;
+}
+
+void CPU::interrupt(uint18 address) {
+  UnibusDevice::interrupt(address);
+  _waiting = false;
+  stack_push(_psw.ps);
+  stack_push(_pc.r);
+  _pc.r = _unibus->read_word(address);
+  _psw.ps = (uint8) _unibus->read_word(address + 2);
 }
 
 void CPU::opcode_clr(uint16 opcode) {
@@ -651,7 +659,9 @@ void CPU::opcode_cmp(uint16 opcode) {
   uint16 val16 = src_val16 - dst_val16;
   _psw.N = is_negative16(val16);
   _psw.Z = is_zero16(val16);
-  _psw.V = (uint8) (is_negative16(src_val16) != is_negative16(dst_val16) && is_negative16(val16) == is_negative16(dst_val16) ? 1 : 0);
+  _psw.V =
+      (uint8) (is_negative16(src_val16) != is_negative16(dst_val16) && is_negative16(val16) == is_negative16(dst_val16)
+               ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val16) - dst_val16) != val16 ? 1 : 0);
 }
 
@@ -661,7 +671,8 @@ void CPU::opcode_cmpb(uint16 opcode) {
   uint8 val8 = src_val8 - dst_val8;
   _psw.N = is_negative8(val8);
   _psw.Z = is_zero8(val8);
-  _psw.V = (uint8) (is_negative8(src_val8) != is_negative8(dst_val8) && is_negative8(val8) == is_negative8(dst_val8) ? 1 : 0);
+  _psw.V = (uint8) (is_negative8(src_val8) != is_negative8(dst_val8) && is_negative8(val8) == is_negative8(dst_val8) ? 1
+                                                                                                                     : 0);
   _psw.C = (uint8) ((((uint32) src_val8) - dst_val8) != val8 ? 1 : 0);
 }
 
@@ -672,7 +683,9 @@ void CPU::opcode_add(uint16 opcode) {
   set_destination_value(opcode, val16, false, false);
   _psw.N = is_negative16(val16);
   _psw.Z = is_zero16(val16);
-  _psw.V = (uint8) (is_negative16(src_val16) == is_negative16(dst_val16) && is_negative16(val16) != is_negative16(dst_val16) ? 1 : 0);
+  _psw.V =
+      (uint8) (is_negative16(src_val16) == is_negative16(dst_val16) && is_negative16(val16) != is_negative16(dst_val16)
+               ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val16) + dst_val16) != val16 ? 1 : 0);
 }
 
@@ -683,7 +696,9 @@ void CPU::opcode_sub(uint16 opcode) {
   set_destination_value(opcode, val16, false, false);
   _psw.N = is_negative16(val16);
   _psw.Z = is_zero16(val16);
-  _psw.V = (uint8) (is_negative16(src_val16) != is_negative16(dst_val16) && is_negative16(val16) == is_negative16(dst_val16) ? 1 : 0);
+  _psw.V =
+      (uint8) (is_negative16(src_val16) != is_negative16(dst_val16) && is_negative16(val16) == is_negative16(dst_val16)
+               ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val16) - dst_val16) != val16 ? 1 : 0);
 }
 
@@ -932,11 +947,11 @@ void CPU::opcode_rtt(uint16 opcode) { // TODO: Check this instruction
 }
 
 void CPU::opcode_halt(uint16 opcode) {
-  // TODO: Implement HALT instruction
+  throw new runtime_error("HALT instruction isn't implemented");
 }
 
 void CPU::opcode_wait(uint16 opcode) {
-  // TODO: Implement WAIT instruction
+  _waiting = true;
 }
 
 void CPU::opcode_reset(uint16 opcode) {

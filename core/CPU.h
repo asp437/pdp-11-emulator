@@ -50,7 +50,8 @@ public:
   void write_word(uint18 address, uint18 base_address, uint16 value) override;
   uint8 read_byte(uint18 address, uint18 base_address) override;
   void write_byte(uint18 address, uint18 base_address, uint8 value) override;
-  void execute_command();
+  void execute();
+  void interrupt(uint18 address) override;
 
   static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
   static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 0177700;
@@ -171,6 +172,7 @@ private:
   PSW _psw;
   Unibus *_unibus;
   int _pc_step; // In bytes
+  bool _waiting;
 
   vector<CPUInstruction> _instruction_set;
 };
