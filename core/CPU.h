@@ -44,8 +44,8 @@ public:
 private:
   void register_instruction(string mnemonic, uint16 opcode_mask, uint16 opcode_signature, void(CPU::*opcode_f)(uint16));
 
-  void set_value(uint16 mode, uint16 address, uint16 value, bool byte_wide, bool update_pointers);
-  uint16 get_value(uint16 mode, uint16 address, bool byte_wide, bool update_pointers);
+  void set_value(uint8 mode, uint8 address, uint16 value, bool byte_wide, bool update_pointers);
+  uint16 get_value(uint8 mode, uint8 address, bool byte_wide, bool update_pointers);
   void set_destination_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);
   uint16 get_destination_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);
   void set_source_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);

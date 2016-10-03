@@ -5,8 +5,8 @@
 #include "Memory.h"
 
 Memory::Memory(uint16 memory_size) : _memory_size(memory_size) {
-  if ((memory_size & 0x1) == 0x1) // TODO: Throw exception
-    cout << "Worng memory size" << endl;
+  if ((memory_size & 0x1) == 0x1)
+    throw new runtime_error("Worng memory size");
   _memory_array = (uint8 *) calloc(memory_size, sizeof(uint8));
   Memory::reset();
 }

@@ -5,10 +5,7 @@
 #include "CPU.h"
 
 #include <iomanip>
-#include <cmath>
 
-// TODO: Rewrite negative check
-// TODO: Write common flags check macorss/function
 const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0177700;
 const uint16 DOUBLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0170000;
 const uint16 REGISTER_ONLY_INSTRUCTION_MASK = (const uint16) 0177770;
@@ -135,7 +132,7 @@ void CPU::register_instruction(string mnemonic,
   cout.flags(cout_flags);
 }
 
-void CPU::set_value(uint16 mode, uint16 address, uint16 value, bool byte_wide, bool update_pointers) {
+void CPU::set_value(uint8 mode, uint8 address, uint16 value, bool byte_wide, bool update_pointers) {
   uint16 index;
   uint16 pointer;
 
@@ -206,10 +203,12 @@ void CPU::set_value(uint16 mode, uint16 address, uint16 value, bool byte_wide, b
       _unibus->write_word(pointer, value);
     }
     break;
+  default:
+    throw new runtime_error("Wrong addressing mode");
   }
 }
 
-uint16 CPU::get_value(uint16 mode, uint16 address, bool byte_wide, bool update_pointers) {
+uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_pointers) {
   uint16 index;
   uint16 pointer;
   uint16 value;
@@ -275,8 +274,9 @@ uint16 CPU::get_value(uint16 mode, uint16 address, bool byte_wide, bool update_p
     } else {
       return _unibus->read_word(pointer);
     }
+  default:
+    throw new runtime_error("Wrong addressing mode");
   }
-  return 0; // TODO: Throw exception
 }
 
 void CPU::set_destination_value(uint16 opcode, uint16 value, bool byte_wide, bool update_pointers) {
@@ -370,7 +370,7 @@ void CPU::opcode_inc(uint16 opcode) {
 
 void CPU::opcode_incb(uint16 opcode) {
   uint8 val8 = (uint8) get_destination_value(opcode, true);
-  _psw.V = (uint8) (val8 == 077777 ? 1 : 0); // TODO: Maybe compare with 0177?
+  _psw.V = (uint8) (val8 == 0177 ? 1 : 0);
   val8++;
   _psw.Z = is_zero8(val8);
   _psw.N = is_negative8(val8);
@@ -388,7 +388,7 @@ void CPU::opcode_dec(uint16 opcode) {
 
 void CPU::opcode_decb(uint16 opcode) {
   uint8 val8 = (uint8) get_destination_value(opcode, true);
-  _psw.V = (uint8) (val8 == 0100000 ? 1 : 0); // TODO: Maybe compare with 0200?
+  _psw.V = (uint8) (val8 == 0200 ? 1 : 0);
   val8--;
   _psw.Z = is_zero8(val8);
   _psw.N = is_negative8(val8);
@@ -542,8 +542,8 @@ void CPU::opcode_adc(uint16 opcode) {
 void CPU::opcode_adcb(uint16 opcode) {
   uint8 val8 = (uint8) get_destination_value(opcode, true);
   uint8 tmp8 = _psw.C;
-  _psw.C = (uint8) ((val8 == 0177777 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 377?
-  _psw.V = (uint8) ((val8 == 0077777 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 177?
+  _psw.C = (uint8) ((val8 == 0377 && tmp8 == 1) ? 1 : 0);
+  _psw.V = (uint8) ((val8 == 0177 && tmp8 == 1) ? 1 : 0);
   val8 = val8 + tmp8;
   _psw.N = is_negative8(val8);
   _psw.Z = is_zero8(val8);
@@ -564,8 +564,8 @@ void CPU::opcode_sbc(uint16 opcode) {
 void CPU::opcode_sbcb(uint16 opcode) {
   uint8 val8 = (uint8) get_destination_value(opcode, true);
   uint8 tmp8 = _psw.C;
-  _psw.C = (uint8) ((val8 == 0000000 && tmp8 == 1) ? 1 : 0); // TODO: Maybe compare with 377?
-  _psw.V = (uint8) ((val8 == 0100000) ? 1 : 0); // TODO: Maybe compare with 177?
+  _psw.C = (uint8) ((val8 == 0377 && tmp8 == 1) ? 1 : 0);
+  _psw.V = (uint8) ((val8 == 0177) ? 1 : 0);
   val8 = val8 - tmp8;
   _psw.N = is_negative8(val8);
   _psw.Z = is_zero8(val8);
