@@ -125,14 +125,6 @@ CPU::~CPU() {
   _pc_step = 0;
 }
 
-string CPU::get_name() {
-  return "Central Processing Unit";
-}
-
-void CPU::register_unibus(Unibus *unibus) {
-  this->_unibus = unibus;
-}
-
 void CPU::reset() {
 }
 

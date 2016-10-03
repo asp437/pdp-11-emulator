@@ -20,13 +20,19 @@ public:
   void write_word(uint18 address, uint16 value);
   uint8 read_byte(uint18 address);
   void write_byte(uint18 address, uint8 value);
+  void npr_request(UnibusDevice *device);
+  void br_request(UnibusDevice *device, uint8 priority);
+
 
   void set_init_line(uint32 ms);
+  void master_device_execute();
   static int get_magic();
 private:
   UnibusDeviceConfiguration *get_registered_device(uint18 address);
 
   vector<UnibusDeviceConfiguration *> _registered_devices;
+  pair<uint8, UnibusDeviceConfiguration *> _master_device;
+  vector<pair<uint8, UnibusDeviceConfiguration *> > _master_requests_queue;
 };
 
 #endif //PDP_11_EMULATOR_UNIBUS_H

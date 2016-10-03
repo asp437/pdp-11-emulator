@@ -5,6 +5,9 @@
 #include "Unibus.h"
 #include <iomanip>
 
+const uint8 NPR_REQUEST_PRIORITY = 8;
+const uint18 CPU_PSW_ADDRESS = 0177776;
+
 class UnibusDeviceConfiguration {
 public:
   UnibusDeviceConfiguration(UnibusDevice *device, uint18 base_address, uint18 reserve_space_size) :
@@ -72,8 +75,62 @@ UnibusDeviceConfiguration *Unibus::get_registered_device(uint18 address) {
 }
 
 void Unibus::set_init_line(uint32 ms) {
-  // TODO: Time snchronization
+  // TODO: Time synchronization
   for (auto it = _registered_devices.begin(); it != _registered_devices.end(); ++it) {
     (*it)->get_device()->reset();
   }
+}
+
+void Unibus::master_device_execute() {
+  pair<uint8, UnibusDeviceConfiguration *> next_master = make_pair(0, (UnibusDeviceConfiguration *) nullptr);
+  auto next_master_it = _master_requests_queue.end();
+
+  uint8 cpu_priority_flag = (uint8) (read_word(CPU_PSW_ADDRESS) >> 5); // Read CPU PSW
+  for (auto it = _master_requests_queue.begin(); it != _master_requests_queue.end(); ++it) {
+    if ((*it).first < cpu_priority_flag)
+      it = _master_requests_queue.erase(it);
+    else if ((*it).first > next_master.first) {
+      next_master = *it;
+      next_master_it = it;
+    }
+  }
+
+  if (next_master.second != nullptr && next_master.first > _master_device.first) {
+    _master_requests_queue.erase(next_master_it);
+    _master_device = next_master;
+  } else {
+    if (!_master_device.second->get_device()->is_busy()) {
+      _master_device = make_pair(cpu_priority_flag, get_registered_device(CPU_PSW_ADDRESS));
+    }
+  }
+
+  _master_device.second->get_device()->execute();
+}
+
+void Unibus::npr_request(UnibusDevice *device) {
+  UnibusDeviceConfiguration *device_configuration = nullptr;
+  for (auto it = _registered_devices.begin(); it != _registered_devices.end(); ++it) {
+    if ((*it)->get_device() == device) {
+      device_configuration = *it;
+    }
+  }
+  if (device_configuration == nullptr)
+    throw new runtime_error("Non registered device requests bus-master status");
+  _master_requests_queue.push_back(make_pair(NPR_REQUEST_PRIORITY, device_configuration));
+}
+
+void Unibus::br_request(UnibusDevice *device, uint8 priority) {
+  if (priority > 7 || priority < 4)
+    throw new runtime_error("UNIBUS only supports BR7-BR4 requests");
+
+  UnibusDeviceConfiguration *device_configuration = nullptr;
+  for (auto it = _registered_devices.begin(); it != _registered_devices.end(); ++it) {
+    if ((*it)->get_device() == device) {
+      device_configuration = *it;
+    }
+  }
+
+  if (device_configuration == nullptr)
+    throw new runtime_error("Non registered device requests bus-master status");
+  _master_requests_queue.push_back(make_pair(priority, device_configuration));
 }

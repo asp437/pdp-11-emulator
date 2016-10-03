@@ -19,15 +19,6 @@ Memory::~Memory()
   _memory_array = nullptr;
 }
 
-string Memory::get_name() {
-  return "Main Random Access Memory";
-}
-
-void Memory::register_unibus(Unibus *unibus)
-{
-  this->_unibus = unibus;
-}
-
 void Memory::reset()
 {
   memset(_memory_array, 0, sizeof(uint8) * _memory_size);

@@ -43,8 +43,7 @@ public:
   CPU();
   virtual ~CPU();
 
-  string get_name() override;
-  void register_unibus(Unibus *unibus) override;
+  string get_name() override { return "Central Processing Unit"; }
   void reset() override;
   uint16 read_word(uint18 address, uint18 base_address) override;
   void write_word(uint18 address, uint18 base_address, uint16 value) override;
@@ -52,6 +51,7 @@ public:
   void write_byte(uint18 address, uint18 base_address, uint8 value) override;
   void execute();
   void interrupt(uint18 address) override;
+  bool is_busy() override { return false; }
 
   static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
   static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 0177700;

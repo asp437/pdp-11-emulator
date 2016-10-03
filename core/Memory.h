@@ -15,14 +15,14 @@ public:
   Memory(uint16 memory_size);
   virtual ~Memory();
 
-  string get_name() override;
-  void register_unibus(Unibus *unibus) override;
+  string get_name() override { return "Main Random Access Memory"; }
   void reset() override;
   uint16 read_word(uint18 address, uint18 base_address) override;
   void write_word(uint18 address, uint18 base_address, uint16 value) override;
   uint8 read_byte(uint18 address, uint18 base_address) override;
   void write_byte(uint18 address, uint18 base_address, uint8 value) override;
   uint16 get_memory_size() const;
+  bool is_busy() override { return false; }
 private:
   uint8 *_memory_array;
   uint16 _memory_size;
