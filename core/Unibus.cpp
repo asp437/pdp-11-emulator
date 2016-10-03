@@ -69,6 +69,6 @@ UnibusDeviceConfiguration *Unibus::get_registered_device(uint18 address) {
   return nullptr;
 }
 
-void Unibus::set_init_line(uint ms) {
+void Unibus::set_init_line(uint32 ms) {
   // TODO: Implement set INIT line method
 }

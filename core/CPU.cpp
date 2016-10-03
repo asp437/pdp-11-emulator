@@ -280,25 +280,25 @@ uint16 CPU::get_value(uint16 mode, uint16 address, bool byte_wide, bool update_p
 }
 
 void CPU::set_destination_value(uint16 opcode, uint16 value, bool byte_wide, bool update_pointers) {
-  uint8 mode = (uint8) (opcode & 0000070) >> 3;
+  uint8 mode = ((uint8) (opcode & 0000070)) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
   set_value(mode, address, value, byte_wide, update_pointers);
 }
 
 uint16 CPU::get_destination_value(uint16 opcode, bool byte_wide, bool update_pointers) {
-  uint8 mode = (uint8) (opcode & 0000070) >> 3;
+  uint8 mode = ((uint8) (opcode & 0000070)) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
   return get_value(mode, address, byte_wide, update_pointers);
 }
 
 void CPU::set_source_value(uint16 opcode, uint16 value, bool byte_wide, bool update_pointers) {
-  uint8 mode = (uint8) (opcode & 0007000) >> 9;
+  uint8 mode = (uint8) ((opcode & 0007000) >> 9);
   uint8 address = (uint8) (opcode & 0000700);
   set_value(mode, address, value, byte_wide, update_pointers);
 }
 
 uint16 CPU::get_source_value(uint16 opcode, bool byte_wide, bool update_pointers) {
-  uint8 mode = (uint8) (opcode & 0007000) >> 9;
+  uint8 mode = (uint8) ((opcode & 0007000) >> 9);
   uint8 address = (uint8) (opcode & 0000700);
   return get_value(mode, address, byte_wide, update_pointers);
 }
@@ -600,7 +600,7 @@ void CPU::opcode_cmp(uint16 opcode) {
   uint16 val16 = src_val16 - dst_val16;
   _psw.N = is_negative16(val16);
   _psw.Z = is_zero16(val16);
-  _psw.V = (uint8) (signbit(src_val16) != signbit(dst_val16) && signbit(val16) == signbit(dst_val16) ? 1 : 0);
+  _psw.V = (uint8) (is_negative16(src_val16) != is_negative16(dst_val16) && is_negative16(val16) == is_negative16(dst_val16) ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val16) - dst_val16) != val16 ? 1 : 0);
 }
 
@@ -610,7 +610,7 @@ void CPU::opcode_cmpb(uint16 opcode) {
   uint8 val8 = src_val8 - dst_val8;
   _psw.N = is_negative8(val8);
   _psw.Z = is_zero8(val8);
-  _psw.V = (uint8) (signbit(src_val8) != signbit(dst_val8) && signbit(val8) == signbit(dst_val8) ? 1 : 0);
+  _psw.V = (uint8) (is_negative8(src_val8) != is_negative8(dst_val8) && is_negative8(val8) == is_negative8(dst_val8) ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val8) - dst_val8) != val8 ? 1 : 0);
 }
 
@@ -621,7 +621,7 @@ void CPU::opcode_add(uint16 opcode) {
   set_destination_value(opcode, val16, false, false);
   _psw.N = is_negative16(val16);
   _psw.Z = is_zero16(val16);
-  _psw.V = (uint8) (signbit(src_val16) == signbit(dst_val16) && signbit(val16) != signbit(dst_val16) ? 1 : 0);
+  _psw.V = (uint8) (is_negative16(src_val16) == is_negative16(dst_val16) && is_negative16(val16) != is_negative16(dst_val16) ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val16) + dst_val16) != val16 ? 1 : 0);
 }
 
@@ -632,7 +632,7 @@ void CPU::opcode_sub(uint16 opcode) {
   set_destination_value(opcode, val16, false, false);
   _psw.N = is_negative16(val16);
   _psw.Z = is_zero16(val16);
-  _psw.V = (uint8) (signbit(src_val16) != signbit(dst_val16) && signbit(val16) == signbit(dst_val16) ? 1 : 0);
+  _psw.V = (uint8) (is_negative16(src_val16) != is_negative16(dst_val16) && is_negative16(val16) == is_negative16(dst_val16) ? 1 : 0);
   _psw.C = (uint8) ((((uint32) src_val16) - dst_val16) != val16 ? 1 : 0);
 }
 
@@ -765,7 +765,7 @@ void CPU::opcode_bge(uint16 opcode) {
 
 void CPU::opcode_blt(uint16 opcode) {
   uint16 offset = opcode & BRANCHING_OFFSET_MASK;
-  if (_psw.V ^ _psw.N == 1)
+  if ((_psw.V ^ _psw.N) == 1)
     _pc.r = _pc.r + (offset << 1);
 }
 
@@ -777,7 +777,7 @@ void CPU::opcode_bgt(uint16 opcode) {
 
 void CPU::opcode_ble(uint16 opcode) {
   uint16 offset = opcode & BRANCHING_OFFSET_MASK;
-  if (_psw.V ^ _psw.N == 1 && _psw.Z == 0)
+  if ((_psw.V ^ _psw.N) == 1 && _psw.Z == 0)
     _pc.r = _pc.r + (offset << 1);
 }
 

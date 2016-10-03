@@ -21,7 +21,7 @@ public:
   uint8 read_byte(uint18 address);
   void write_byte(uint18 address, uint8 value);
 
-  void set_init_line(uint ms);
+  void set_init_line(uint32 ms);
   static int get_magic();
 private:
   UnibusDeviceConfiguration *get_registered_device(uint18 address);
