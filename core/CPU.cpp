@@ -114,8 +114,9 @@ CPU::CPU() {
   cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
   _waiting = false;
   // TODO: Initialize PC and PSW
-  _psw.ps = 0;
   memset(_r, 0, sizeof(_r));
+  _psw.ps = 0;
+  _pc.r = 0001000;
 }
 
 CPU::~CPU() {
@@ -871,7 +872,7 @@ void CPU::opcode_blo(uint16 opcode) {
 }
 
 void CPU::opcode_jmp(uint16 opcode) {
-  if ((opcode & 0000070) >> 3) {
+  if (((opcode & 0000070) >> 3) == 0) {
     throw new logic_error("Illegal JMP instruction");
   }
   uint16 val16 = get_destination_value(opcode);
@@ -946,7 +947,9 @@ void CPU::opcode_rtt(uint16 opcode) { // TODO: Check this instruction
 }
 
 void CPU::opcode_halt(uint16 opcode) {
-  throw new runtime_error("HALT instruction isn't implemented");
+  // TODO: Use HALT exception
+//  throw new runtime_error("HALT instruction isn't implemented");
+  _waiting = true;
 }
 
 void CPU::opcode_wait(uint16 opcode) {

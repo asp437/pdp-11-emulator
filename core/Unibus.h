@@ -22,11 +22,10 @@ public:
   void write_byte(uint18 address, uint8 value);
   void npr_request(UnibusDevice *device);
   void br_request(UnibusDevice *device, uint8 priority);
-
+  void cpu_interrupt(uint18 address);
 
   void set_init_line(uint32 ms);
   void master_device_execute();
-  static int get_magic();
 private:
   UnibusDeviceConfiguration *get_registered_device(uint18 address);
 

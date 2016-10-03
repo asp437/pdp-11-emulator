@@ -29,7 +29,8 @@ uint16 Memory::read_word(uint18 address, uint18 base_address) {
     throw new runtime_error("Illegal memory address access");
   if ((address & 0x1) == 0x1)
     throw new runtime_error("Illegal memory address access");
-  return _memory_array[address - base_address] | (_memory_array[address - base_address + 1] << 8);
+  uint16 val = _memory_array[address - base_address] | (_memory_array[address - base_address + 1] << 8);
+  return val;
 }
 
 void Memory::write_word(uint18 address, uint18 base_address, uint16 value) {

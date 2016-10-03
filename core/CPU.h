@@ -54,7 +54,7 @@ public:
   bool is_busy() override { return false; }
 
   static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
-  static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 0177700;
+  static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 077;
 private:
   void register_instruction(string mnemonic, uint16 opcode_mask, uint16 opcode_signature, void(CPU::*opcode_f)(uint16));
 
@@ -175,7 +175,6 @@ private:
     };
   };
   PSW _psw;
-  Unibus *_unibus;
   int _pc_step; // In bytes
   bool _waiting;
 

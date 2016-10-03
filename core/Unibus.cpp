@@ -29,10 +29,6 @@ private:
   uint18 _reserved_space_size;
 };
 
-int Unibus::get_magic() {
-  return 42;
-}
-
 bool Unibus::register_device(UnibusDevice *device, uint18 base_address, uint18 reserve_space_size) {
   // TODO: Check address spaces intersections
   UnibusDeviceConfiguration
@@ -66,8 +62,8 @@ void Unibus::write_byte(uint18 address, uint8 value) {
 
 UnibusDeviceConfiguration *Unibus::get_registered_device(uint18 address) {
   for (auto it = _registered_devices.begin(); it != _registered_devices.end(); ++it) {
-    if ((*it)->get_base_address() >= address
-        && (*it)->get_base_address() + (*it)->get_reserved_space_size() < address) {
+    if ((*it)->get_base_address() <= address
+        && (*it)->get_base_address() + (*it)->get_reserved_space_size() > address) {
       return (*it);
     }
   }
@@ -99,7 +95,7 @@ void Unibus::master_device_execute() {
     _master_requests_queue.erase(next_master_it);
     _master_device = next_master;
   } else {
-    if (!_master_device.second->get_device()->is_busy()) {
+    if (_master_device.second == nullptr || !_master_device.second->get_device()->is_busy()) {
       _master_device = make_pair(cpu_priority_flag, get_registered_device(CPU_PSW_ADDRESS));
     }
   }
@@ -133,4 +129,9 @@ void Unibus::br_request(UnibusDevice *device, uint8 priority) {
   if (device_configuration == nullptr)
     throw new runtime_error("Non registered device requests bus-master status");
   _master_requests_queue.push_back(make_pair(priority, device_configuration));
+}
+
+void Unibus::cpu_interrupt(uint18 address) {
+  UnibusDeviceConfiguration* cpu_device_configuration = get_registered_device(CPU_PSW_ADDRESS);
+  cpu_device_configuration->get_device()->interrupt(address);
 }
