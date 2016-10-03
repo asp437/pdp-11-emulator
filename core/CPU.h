@@ -13,8 +13,8 @@ class CPU;
 union PSW {
   uint16 ps;
   struct {
-    uint8 :8, // Most significant 8 bits not used
-        I:3, // Interrupt priority level
+    uint8 stub; // Most significant 8 bits not used
+    uint8 I:3, // Interrupt priority level
         T:1, // Trap flag
         N:1, // Sign flag
         Z:1, // Zero flag

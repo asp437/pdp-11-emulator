@@ -2,11 +2,12 @@
 // Created by Aleksandr Parfenov on 01.10.16.
 //
 
+#include <cstring>
 #include "Memory.h"
 
 Memory::Memory(uint16 memory_size) : _memory_size(memory_size) {
   if ((memory_size & 0x1) == 0x1)
-    throw new runtime_error("Worng memory size");
+    throw new runtime_error("Wrong memory size");
   _memory_array = (uint8 *) calloc(memory_size, sizeof(uint8));
   Memory::reset();
 }
@@ -19,7 +20,7 @@ Memory::~Memory()
 }
 
 string Memory::get_name() {
-  return "Main Memory";
+  return "Main Random Access Memory";
 }
 
 void Memory::register_unibus(Unibus *unibus)

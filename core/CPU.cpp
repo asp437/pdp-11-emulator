@@ -5,6 +5,7 @@
 #include "CPU.h"
 
 #include <iomanip>
+#include <cstring>
 
 const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0177700;
 const uint16 DOUBLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0170000;
@@ -123,7 +124,7 @@ CPU::~CPU() {
 }
 
 string CPU::get_name() {
-  return "CPU";
+  return "Central Processing Unit";
 }
 
 void CPU::register_unibus(Unibus* unibus) {
@@ -138,7 +139,7 @@ void CPU::reset() {
 
 uint16 CPU::read_word(uint18 address, uint18 base_address) {
   if (address >= BASE_MEM_MAP_SEGMENT_ADDRESS && address < BASE_MEM_MAP_SEGMENT_ADDRESS + 020) {
-    uint8 reg_n = (address - 0177700) >> 1;
+    uint8 reg_n = (uint8) ((address - 0177700) >> 1);
     return _r[reg_n].r;
   } else if (address == 0177776)
     return _psw.ps;
@@ -148,7 +149,7 @@ uint16 CPU::read_word(uint18 address, uint18 base_address) {
 
 void CPU::write_word(uint18 address, uint18 base_address, uint16 value) {
   if (address >= 0177700 && address < 0177720) {
-    uint8 reg_n = (address - 0177700) >> 1;
+    uint8 reg_n = (uint8) ((address - 0177700) >> 1);
     _r[reg_n].r = value;
   } else if (address == 0177776)
     _psw.ps = value;
