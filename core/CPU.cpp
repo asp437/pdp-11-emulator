@@ -111,13 +111,13 @@ CPU::CPU() {
   register_instruction("SCC", NO_OPERANDS_INSTRUCTION_MASK, 0000277, &CPU::opcode_cco); // Used for disasm mnemonic
   register_instruction("CCO", CONDITION_CODE_INSTRUCTION_MASK, 0000240, &CPU::opcode_cco);
 
-  cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
+  cout << "CPU initialization complete. Totally registered " << _instruction_set.size() << " instructions." << endl;
   _waiting = false;
   _halted = false;
   // TODO: Initialize PC and PSW
   memset(_r, 0, sizeof(_r));
   _psw.ps = 0;
-  _pc.r = 0001000;
+  _pc.r = 0140000;
 }
 
 CPU::~CPU() {
@@ -201,7 +201,10 @@ void CPU::set_value(uint8 mode,
       this->_r[address].r += update_pointers ? 1 : 0;
     } else {
       _unibus->write_word(this->_r[address].r, value);
-      this->_r[address].r += update_pointers ? 2 : 0;
+      if (address == 07)
+        _pc_step += 2;
+      else
+        this->_r[address].r += update_pointers ? 2 : 0;
     }
     break;
   case 3: // Autoincrement Deferred
@@ -275,7 +278,10 @@ uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_poi
       this->_r[address].r += update_pointers ? 1 : 0;
     } else {
       value = _unibus->read_word(this->_r[address].r);
-      this->_r[address].r += update_pointers ? 2 : 0;
+      if (address == 07)
+        _pc_step += 2;
+      else
+        this->_r[address].r += update_pointers ? 2 : 0;
     }
     return value;
   case 3: // Autoincrement Deferred
@@ -330,7 +336,8 @@ void CPU::set_destination_value(uint16 opcode, uint16 value, bool byte_wide, boo
   uint8 mode = ((uint8) (opcode & 0000070)) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
   uint8 src_mode = (uint8) ((opcode & 0007000) >> 9);
-  uint16 index_step = (uint16) ((opcode & 0070000) != 0 && src_mode >= 6 ? 2 : 0); // Double Operand Instructions check
+  bool src_follow_instr = ((opcode & 0070000) != 0 && src_mode >= 6) || (opcode & 0000700) == 0000700;
+  uint16 index_step = (uint16) (src_follow_instr ? 2 : 0); // Double Operand Instructions check
   set_value(mode, address, value, byte_wide, update_pointers, index_step);
 }
 
@@ -344,13 +351,13 @@ uint16 CPU::get_destination_value(uint16 opcode, bool byte_wide, bool update_poi
 
 void CPU::set_source_value(uint16 opcode, uint16 value, bool byte_wide, bool update_pointers) {
   uint8 mode = (uint8) ((opcode & 0007000) >> 9);
-  uint8 address = (uint8) (opcode & 0000700) >> 6;
+  uint8 address = (uint8) ((opcode & 0000700) >> 6);
   set_value(mode, address, value, byte_wide, update_pointers, 0);
 }
 
 uint16 CPU::get_source_value(uint16 opcode, bool byte_wide, bool update_pointers) {
   uint8 mode = (uint8) ((opcode & 0007000) >> 9);
-  uint8 address = (uint8) (opcode & 0000700) >> 6;
+  uint8 address = (uint8) ((opcode & 0000700) >> 6);
   return get_value(mode, address, byte_wide, update_pointers, 0);
 }
 

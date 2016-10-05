@@ -31,12 +31,12 @@ public:
   void setupUi(QMainWindow *MainWindow) {
     if (MainWindow->objectName().isEmpty())
       MainWindow->setObjectName(QStringLiteral("MainWindow"));
-    MainWindow->resize(400, 300);
+    MainWindow->resize(1176, 882);
     centralWidget = new QWidget(MainWindow);
     centralWidget->setObjectName(QStringLiteral("centralWidget"));
     gridLayoutWidget = new QWidget(centralWidget);
     gridLayoutWidget->setObjectName(QStringLiteral("gridLayoutWidget"));
-    gridLayoutWidget->setGeometry(QRect(0, 0, 401, 301));
+    gridLayoutWidget->setGeometry(QRect(0, 0, 1176, 882));
     gridLayout = new QGridLayout(gridLayoutWidget);
     gridLayout->setSpacing(6);
     gridLayout->setContentsMargins(11, 11, 11, 11);
@@ -44,6 +44,8 @@ public:
     gridLayout->setContentsMargins(0, 0, 0, 0);
     graphicsView = new QGraphicsView(gridLayoutWidget);
     graphicsView->setObjectName(QStringLiteral("graphicsView"));
+    graphicsView->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+    graphicsView->resize(1176, 882);
 
     gridLayout->addWidget(graphicsView, 0, 0, 1, 1);
 

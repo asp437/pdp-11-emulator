@@ -2,16 +2,17 @@
 #include "core/Unibus.h"
 #include "core/Memory.h"
 #include "core/CPU.h"
+#include "core/ROM.h"
 #include "core/io_devices/PDPKeyboard.h"
 #include "core/io_devices/PDPTapeWriter.h"
 #include "core/io_devices/PDPDisplayAdapter.h"
 #include "gui/mainwindow.h"
-#include <unistd.h>
 #include <QApplication>
 
 int main(int argc, char **argv) {
   Unibus unibus;
   Memory memory(16 * 1024);
+  ROM rom("video_test.bin");
   CPU cpu;
   PDPKeyboard keyboard;
   PDPTapeWriter tape_writer;
@@ -19,6 +20,7 @@ int main(int argc, char **argv) {
 
   unibus.register_device(&memory, 0, memory.get_memory_size());
   unibus.register_device(&cpu, CPU::BASE_MEM_MAP_SEGMENT_ADDRESS, CPU::BASE_MEM_MAP_SEGMENT_SIZE);
+  unibus.register_device(&rom, ROM::ROM_DEFAULT_OFFSET, ROM::ROM_DEFAULT_SIZE);
   unibus.register_device(&keyboard,
                          PDPKeyboard::PDP_KEYBOARD_MEM_REGISTERS_ADDRESS,
                          PDPKeyboard::PDP_KEYBOARD_MEM_REGISTERS_SIZE);
@@ -40,6 +42,7 @@ int main(int argc, char **argv) {
 //  memory.write_word(0001006, 0, 0176100);
 //  memory.write_word(0001010, 0, 0000127);
 //  memory.write_word(0001012, 0, 0001000);
+  /*
   memory.write_word(0001000, 0, 0005000);
   memory.write_word(0001002, 0, 0005001);
   memory.write_word(0001004, 0, 0005002);
@@ -70,6 +73,7 @@ int main(int argc, char **argv) {
   memory.write_word(0001066, 0, 0001114);
   memory.write_word(0001070, 0, 0000671);
   memory.write_word(0001072, 0, 0010001);
+  */
 
   uint32 t = 0;
   while (!cpu.is_halted() && t < 10000000) {

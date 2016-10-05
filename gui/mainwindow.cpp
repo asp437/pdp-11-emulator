@@ -30,5 +30,6 @@ void MainWindow::renderScreen(std::vector<std::vector<int> > screen_buffer) {
   }
   screen_graphics_item->setPixmap(QPixmap::fromImage(image));
   screen_graphics_item->update(0, 0, image.width(), image.height());
+  screen_graphics_item->setScale(2);
   ui->graphicsView->update();
 }
