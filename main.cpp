@@ -5,9 +5,11 @@
 #include "core/io_devices/PDPKeyboard.h"
 #include "core/io_devices/PDPTapeWriter.h"
 #include "core/io_devices/PDPDisplayAdapter.h"
+#include "gui/mainwindow.h"
 #include <unistd.h>
+#include <QApplication>
 
-int main() {
+int main(int argc, char **argv) {
   Unibus unibus;
   Memory memory(16 * 1024);
   CPU cpu;
@@ -32,16 +34,53 @@ int main() {
   unibus.register_device(&display_adapter,
                          PDPDisplayAdapter::PDP_VIDEO_ADAPTER_MODE_ADDRESS,
                          PDPDisplayAdapter::PDP_VIDEO_ADAPTER_IO_SIZE);
+//  memory.write_word(0001000, 0, 0005000);
+//  memory.write_word(0001002, 0, 0016060);
+//  memory.write_word(0001004, 0, 0176000);
+//  memory.write_word(0001006, 0, 0176100);
+//  memory.write_word(0001010, 0, 0000127);
+//  memory.write_word(0001012, 0, 0001000);
   memory.write_word(0001000, 0, 0005000);
-  memory.write_word(0001002, 0, 0016060);
-  memory.write_word(0001004, 0, 0176000);
-  memory.write_word(0001006, 0, 0176100);
-  memory.write_word(0001010, 0, 0000127);
-  memory.write_word(0001012, 0, 0001000);
+  memory.write_word(0001002, 0, 0005001);
+  memory.write_word(0001004, 0, 0005002);
+  memory.write_word(0001006, 0, 0005003);
+  memory.write_word(0001010, 0, 0005004);
+  memory.write_word(0001012, 0, 0016003);
+  memory.write_word(0001014, 0, 0001066);
+  memory.write_word(0001016, 0, 0016004);
+  memory.write_word(0001020, 0, 0001070);
+  memory.write_word(0001022, 0, 0010060);
+  memory.write_word(0001024, 0, 0176300);
+  memory.write_word(0001026, 0, 0010160);
+  memory.write_word(0001030, 0, 0176304);
+  memory.write_word(0001032, 0, 0010260);
+  memory.write_word(0001034, 0, 0176306);
+  memory.write_word(0001036, 0, 0016060);
+  memory.write_word(0001040, 0, 0001072);
+  memory.write_word(0001042, 0, 0176302);
+  memory.write_word(0001044, 0, 0005201);
+  memory.write_word(0001046, 0, 0003401);
+  memory.write_word(0001050, 0, 0000766);
+  memory.write_word(0001052, 0, 0005001);
+  memory.write_word(0001054, 0, 0005202);
+  memory.write_word(0001056, 0, 0020402);
+  memory.write_word(0001060, 0, 0003400);
+  memory.write_word(0001062, 0, 0000741);
+  memory.write_word(0001064, 0, 0000000);
+  memory.write_word(0001066, 0, 0001114);
+  memory.write_word(0001070, 0, 0000671);
+  memory.write_word(0001072, 0, 0010001);
 
-  while (true) {
+  uint32 t = 0;
+  while (!cpu.is_halted() && t < 10000000) {
     unibus.master_device_execute();
-    usleep(10000);
+    t++;
+//    usleep(10000);
   }
-  return 0;
+
+  QApplication a(argc, argv);
+  MainWindow w;
+  w.renderScreen(display_adapter.get_video_buffer());
+  w.show();
+  return a.exec();
 }

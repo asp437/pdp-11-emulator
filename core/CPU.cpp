@@ -113,6 +113,7 @@ CPU::CPU() {
 
   cout << "Totally registered " << _instruction_set.size() << " instructions." << endl;
   _waiting = false;
+  _halted = false;
   // TODO: Initialize PC and PSW
   memset(_r, 0, sizeof(_r));
   _psw.ps = 0;
@@ -328,26 +329,28 @@ uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_poi
 void CPU::set_destination_value(uint16 opcode, uint16 value, bool byte_wide, bool update_pointers) {
   uint8 mode = ((uint8) (opcode & 0000070)) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
-  uint16 index_step = (uint16) ((opcode & 0070000) != 0 ? 2 : 0); // Double Operand Instructions check
+  uint8 src_mode = (uint8) ((opcode & 0007000) >> 9);
+  uint16 index_step = (uint16) ((opcode & 0070000) != 0 && src_mode >= 6 ? 2 : 0); // Double Operand Instructions check
   set_value(mode, address, value, byte_wide, update_pointers, index_step);
 }
 
 uint16 CPU::get_destination_value(uint16 opcode, bool byte_wide, bool update_pointers) {
   uint8 mode = ((uint8) (opcode & 0000070)) >> 3;
   uint8 address = (uint8) (opcode & 0000007);
-  uint16 index_step = (uint16) ((opcode & 0070000) != 0 ? 2 : 0); // Double Operand Instructions check
+  uint8 src_mode = (uint8) ((opcode & 0007000) >> 9);
+  uint16 index_step = (uint16) ((opcode & 0070000) != 0 && src_mode >= 6 ? 2 : 0); // Double Operand Instructions check
   return get_value(mode, address, byte_wide, update_pointers, index_step);
 }
 
 void CPU::set_source_value(uint16 opcode, uint16 value, bool byte_wide, bool update_pointers) {
   uint8 mode = (uint8) ((opcode & 0007000) >> 9);
-  uint8 address = (uint8) (opcode & 0000700);
+  uint8 address = (uint8) (opcode & 0000700) >> 6;
   set_value(mode, address, value, byte_wide, update_pointers, 0);
 }
 
 uint16 CPU::get_source_value(uint16 opcode, bool byte_wide, bool update_pointers) {
   uint8 mode = (uint8) ((opcode & 0007000) >> 9);
-  uint8 address = (uint8) (opcode & 0000700);
+  uint8 address = (uint8) (opcode & 0000700) >> 6;
   return get_value(mode, address, byte_wide, update_pointers, 0);
 }
 
@@ -771,104 +774,104 @@ void CPU::opcode_xor(uint16 opcode) {
 }
 
 void CPU::opcode_br(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
-  _pc.r = _pc.r + (offset << 1);
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
+  _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bne(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.Z == 0)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_beq(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.Z == 1)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bpl(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.N == 0)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bmi(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.N == 1)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bvc(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.V == 0)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bvs(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.V == 1)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bcc(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.C == 0)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bcs(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.C == 1)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bge(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.V == _psw.N)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_blt(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if ((_psw.V ^ _psw.N) == 1)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bgt(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.V == _psw.N && _psw.Z == 0)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_ble(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if ((_psw.V ^ _psw.N) == 1 && _psw.Z == 0)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bhi(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.C == 0 && _psw.Z == 0)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_blos(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.C == 1 || _psw.Z == 1)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_bhis(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.C == 0)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_blo(uint16 opcode) {
-  uint16 offset = opcode & BRANCHING_OFFSET_MASK;
+  int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
   if (_psw.C == 1)
-    _pc.r = _pc.r + (offset << 1);
+    _pc.r = _pc.r + ((int16) offset << 1);
 }
 
 void CPU::opcode_jmp(uint16 opcode) {
@@ -949,11 +952,11 @@ void CPU::opcode_rtt(uint16 opcode) { // TODO: Check this instruction
 void CPU::opcode_halt(uint16 opcode) {
   // TODO: Use HALT exception
 //  throw new runtime_error("HALT instruction isn't implemented");
-  _waiting = true;
+  _halted = true;
 }
 
 void CPU::opcode_wait(uint16 opcode) {
-  _waiting = true;
+//  _waiting = true;
 }
 
 void CPU::opcode_reset(uint16 opcode) {

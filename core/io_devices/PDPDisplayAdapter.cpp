@@ -135,34 +135,10 @@ uint16 PDPDisplayAdapter::get_width() {
       return 588;
     case PDP_VIDEO_ADAPTER_MODE_4X3_2_BIT:
       return 416;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_3_BIT:
-      return 340;
     case PDP_VIDEO_ADAPTER_MODE_4X3_4_BIT:
       return 292;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_5_BIT:
-      return 264;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_6_BIT:
-      return 240;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_7_BIT:
-      return 220;
     case PDP_VIDEO_ADAPTER_MODE_4X3_8_BIT:
       return 208;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_1_BIT:
-      return 672;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_2_BIT:
-      return 480;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_3_BIT:
-      return 384;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_4_BIT:
-      return 336;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_5_BIT:
-      return 304;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_6_BIT:
-      return 272;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_7_BIT:
-      return 256;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_8_BIT:
-      return 240;
     default:
       throw new runtime_error("Unsupported video mode");
   }
@@ -174,79 +150,92 @@ uint16 PDPDisplayAdapter::get_height() {
       return 441;
     case PDP_VIDEO_ADAPTER_MODE_4X3_2_BIT:
       return 312;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_3_BIT:
-      return 255;
     case PDP_VIDEO_ADAPTER_MODE_4X3_4_BIT:
       return 219;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_5_BIT:
-      return 198;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_6_BIT:
-      return 180;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_7_BIT:
-      return 165;
     case PDP_VIDEO_ADAPTER_MODE_4X3_8_BIT:
       return 156;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_1_BIT:
-      return 378;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_2_BIT:
-      return 270;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_3_BIT:
-      return 216;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_4_BIT:
-      return 189;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_5_BIT:
-      return 171;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_6_BIT:
-      return 153;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_7_BIT:
-      return 144;
-    case PDP_VIDEO_ADAPTER_MODE_16X9_8_BIT:
-      return 135;
     default:
       throw new runtime_error("Unsupported video mode");
   }
 }
 
 void PDPDisplayAdapter::set_pixel(uint16 x, uint16 y, uint8 color) {
-  uint16 pixel_index = _arg0 + _arg1 * get_width();
+  uint16 pixel_index = x + y * get_width();
   uint8 color_depth = 0;
-  if (_mode <= 15) { // 4x3 mode
-    color_depth = (uint8) ((_mode >> 1) & 016 + 1);
-  } else { // 16x9 mode
-    color_depth = (uint8) ((_mode >> 4) & 017);
-  }
+
+  color_depth = (uint8) (((_mode >> 1) & 016) + 1);
+
   uint16 pixel_vram_offset = (uint16) (pixel_index / 8 * color_depth);
   uint16 pixel_vram_internal_offset = pixel_index - (uint16) (pixel_vram_offset * 8 / color_depth);
-  if (pixel_vram_internal_offset + color_depth > 8) { // Pixel stored partial in two bytes
-    uint8 new_color = _vram[pixel_vram_offset];
-    uint8 mask = (uint8) ((2 << color_depth - 1) << pixel_vram_internal_offset);
-    uint8 color1 = color << pixel_vram_internal_offset;
-    color1 = color1 & mask;
-    mask = ~mask;
-    new_color = new_color & mask; // Reset selected pixel
-    new_color = new_color | color1;
-    _vram[pixel_vram_offset] = new_color;
 
-    new_color = _vram[pixel_vram_offset + 1];
-    mask = (uint8) ((2 << color_depth - 1) >> (8 - pixel_vram_internal_offset));
-    uint8 color2 = color >> (8 - pixel_vram_internal_offset);
-    color2 = color2 & mask;
-    mask = ~mask;
-    new_color = new_color & mask; // Reset selected pixel
-    new_color = (new_color | color2);
-    _vram[pixel_vram_offset] = new_color;
+  uint8 new_color = _vram[pixel_vram_offset];
+  uint8 mask = (uint8) ((1 << color_depth - 1) << pixel_vram_internal_offset);
+  color = color << pixel_vram_internal_offset;
+  color = color & mask;
+  mask = ~mask;
+  new_color = new_color & mask; // Reset selected pixel
+  new_color = new_color | color;
+  _vram[pixel_vram_offset] = new_color;
+}
+
+uint PDPDisplayAdapter::get_pixel(uint16 x, uint16 y) {
+  uint16 pixel_index = x + y * get_width();
+  uint8 color_depth = 0;
+  color_depth = (uint8) (((_mode >> 1) & 016) + 1);
+  uint16 pixel_vram_offset = (uint16) (pixel_index / 8 * color_depth);
+  uint16 pixel_vram_internal_offset = pixel_index - (uint16) (pixel_vram_offset * 8 / color_depth);
+  uint color = 0;
+
+  uint8 mask = (uint8) ((1 << color_depth - 1) << pixel_vram_internal_offset);
+  color = _vram[pixel_vram_offset] & mask;
+  color = color >> pixel_vram_internal_offset;
+
+  if ((_mode & 0001) == 0001) { // Palette mode
+    int16 color16 = _palette[color];
+    uint r = (color >> 11) & 077,
+        g = (color >> 6) & 037,
+        b = (color) & 077;
+    r = r << 2;
+    g = g << 3;
+    b = b << 2;
+    color = r << 16 | g << 8 | b;
   } else {
-    uint8 new_color = _vram[pixel_vram_offset];
-    uint8 mask = (uint8) ((2 << color_depth - 1) << pixel_vram_internal_offset);
-    color = color << pixel_vram_internal_offset;
-    color = color & mask;
-    mask = ~mask;
-    new_color = new_color & mask; // Reset selected pixel
-    new_color = new_color | color;
-    _vram[pixel_vram_offset] = new_color;
+    uint r, g, b;
+    switch (color_depth) {
+      case 1:
+        r = g = b = color << 7;
+        break;
+      case 2:
+        r = g = b = color << 6;
+        break;
+      case 4:
+        r = g = b = color << 4;
+        break;
+      case 8:
+        // TODO: Convert to RGB
+        r = g = b = color;
+        break;
+    }
+    color = r << 16 | g << 8 | b;
   }
+  return color;
 }
 
 void PDPDisplayAdapter::print_char(uint16 x, uint16 y, uint8 char_code) {
   // TODO: Implement print_char
+}
+
+vector<vector<int>> PDPDisplayAdapter::get_video_buffer() {
+  vector<vector<int>> result;
+  uint16 height = get_height(), width = get_width();
+  result.resize(width);
+  for (uint16 x = 0; x < width; x++)
+    result[x].resize(height);
+
+  for (uint16 y = 0; y < height; y++) {
+    for (uint16 x = 0; x < width; x++) {
+      result[x][y] = get_pixel(x, y);
+    }
+  }
+  return result;
 }

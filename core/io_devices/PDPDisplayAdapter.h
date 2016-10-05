@@ -8,6 +8,8 @@
 #include "../../common.h"
 #include "../UnibusDevice.h"
 
+#include <vector>
+
 class PDPDisplayAdapter : public UnibusDevice {
 public:
   PDPDisplayAdapter();
@@ -19,23 +21,12 @@ public:
   void write_word(uint18 address, uint18 base_address, uint16 value) override;
   uint8 read_byte(uint18 address, uint18 base_address) override;
   void write_byte(uint18 address, uint18 base_address, uint8 value) override;
+  vector<vector<int> > get_video_buffer();
 
   static const uint8 PDP_VIDEO_ADAPTER_MODE_4X3_1_BIT = 0; // 588x441
   static const uint8 PDP_VIDEO_ADAPTER_MODE_4X3_2_BIT = 2; // 416x312
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_4X3_3_BIT = 4; // 340x255
   static const uint8 PDP_VIDEO_ADAPTER_MODE_4X3_4_BIT = 6; // 292x219
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_4X3_5_BIT = 8; // 264x198
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_4X3_6_BIT = 10; // 240x180
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_4X3_7_BIT = 12; // 220x165
   static const uint8 PDP_VIDEO_ADAPTER_MODE_4X3_8_BIT = 14; // 208x156
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_16X9_1_BIT = 16; // 672x378
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_16X9_2_BIT = 32; // 480x270
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_16X9_3_BIT = 48; // 384x216
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_16X9_4_BIT = 64; // 336x189
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_16X9_5_BIT = 80; // 304x171
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_16X9_6_BIT = 96; // 272x153
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_16X9_7_BIT = 112; // 256x144
-  static const uint8 PDP_VIDEO_ADAPTER_MODE_16X9_8_BIT = 128; // 240x135
 
   static const uint8 PDP_VIDEO_ADAPTER_MODE_USE_PALETTE = 1; // ORed with another video mode
   static const uint8 PDP_VIDEO_ADAPTER_MODE_NO_PALETTE = 0; // ORed with another video mode
@@ -54,6 +45,7 @@ private:
   uint16 get_width();
   uint16 get_height();
   void set_pixel(uint16 x, uint16 y, uint8 color);
+  uint get_pixel(uint16 x, uint16 y);
   void print_char(uint16 x, uint16 y, uint8 char_code);
 
   uint8 *_vram;

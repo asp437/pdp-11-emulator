@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.6)
 project(pdp_11_emulator)
 
+find_package(Qt5Core REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Gui REQUIRED)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(SOURCE_FILES core/Unibus.cpp core/Unibus.h)
@@ -11,4 +15,6 @@ set(SOURCE_FILES ${SOURCE_FILES} main.cpp common.h)
 set(SOURCE_FILES ${SOURCE_FILES} core/io_devices/PDPKeyboard.cpp core/io_devices/PDPKeyboard.h)
 set(SOURCE_FILES ${SOURCE_FILES} core/io_devices/PDPTapeWriter.cpp core/io_devices/PDPTapeWriter.h)
 set(SOURCE_FILES ${SOURCE_FILES} core/io_devices/PDPDisplayAdapter.cpp core/io_devices/PDPDisplayAdapter.h)
+set(SOURCE_FILES ${SOURCE_FILES} gui/mainwindow.cpp gui/mainwindow.h gui/moc_mainwindow.cpp gui/ui_mainwindow.h)
 add_executable(pdp_11_emulator ${SOURCE_FILES})
+qt5_use_modules(pdp_11_emulator Core Widgets Gui)

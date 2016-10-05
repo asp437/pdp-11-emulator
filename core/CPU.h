@@ -52,6 +52,7 @@ public:
   void execute();
   void interrupt(uint18 address) override;
   bool is_busy() override { return false; }
+  bool is_halted() { return _halted; }
 
   static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
   static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 077;
@@ -177,6 +178,7 @@ private:
   PSW _psw;
   int _pc_step; // In bytes
   bool _waiting;
+  bool _halted;
 
   vector<CPUInstruction> _instruction_set;
 };
