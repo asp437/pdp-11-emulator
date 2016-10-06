@@ -58,6 +58,7 @@ public:
   static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 077;
 private:
   void register_instruction(string mnemonic, uint16 opcode_mask, uint16 opcode_signature, void(CPU::*opcode_f)(uint16));
+  string disasm(uint16 opcode);
 
   void set_value(uint8 mode,
                  uint8 address,
