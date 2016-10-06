@@ -64,12 +64,12 @@ void PDPDisplayAdapter::write_word(uint18 address, uint18 base_address, uint16 v
       && address < PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS + PDP_VIDEO_ADAPTER_IO_PALETTE_SIZE) {
     _palette[(address - PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS) >> 1] = value;
     int16 color16 = value;
-    uint r = (color16 >> 11) & 077,
-      g = (color16 >> 6) & 037,
-      b = (color16) & 077;
-    r = r << 2;
-    g = g << 3;
-    b = b << 2;
+    uint r = (color16 >> 11) & 037,
+      g = (color16 >> 5) & 077,
+      b = (color16) & 037;
+    r = r * (255.0 / 31);
+    g = g * (255.0 / 63);
+    b = b * (255.0 / 31);
     _palette32[(address - PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS) >> 1] = r << 16 | g << 8 | b;
   } else if (address == PDP_VIDEO_ADAPTER_MODE_ADDRESS) {
     _mode = (uint8) value;

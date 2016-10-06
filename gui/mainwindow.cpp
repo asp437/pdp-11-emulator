@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
   _clock_timer = new QTimer();
   _display_timer = new QTimer();
   _clock_timer->setInterval(0);
-  _display_timer->setInterval(1000.0 / 60.0);
+  _display_timer->setInterval(1000.0 / 20.0);
   connect(_clock_timer, SIGNAL(timeout()), this, SLOT(clock_update()));
   connect(_display_timer, SIGNAL(timeout()), this, SLOT(display_update()));
   // _clock_timer->start();
@@ -74,10 +74,10 @@ MainWindow::MainWindow(QWidget *parent) :
   _ui->memory_explorer_table->setModel(memory_model);
   _ui->memory_explorer_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
   _ui->memory_explorer_table->horizontalHeader()->setSectionsClickable(false);
-
 }
 
 MainWindow::~MainWindow() {
+  delete _screen_graphics_item;
   delete _clock_timer;
   delete _display_timer;
   delete _ui;
@@ -131,16 +131,12 @@ void MainWindow::clock_update() {
     std::cout << "PDP Machine halted" << std::endl;
     _clock_timer->stop();
   }
-  // std::cout << "Clock update" << std::endl;
-  // _clock_timer->stop();
 }
 
 void MainWindow::display_update() {
   // _pdp_machine->get_video_buffer();
   // render_display(_pdp_machine->get_video_buffer());
   render_display(_pdp_machine->get_display_adapter());
-  // std::cout << "Display update" << std::endl;
-  // _display_timer->stop();
 }
 
 void MainWindow::on_jump_to_disasm_edit_returnPressed() {
