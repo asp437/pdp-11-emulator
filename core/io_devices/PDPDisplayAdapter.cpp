@@ -8,28 +8,17 @@
 PDPDisplayAdapter::PDPDisplayAdapter() {
   _vram_size = PDP_VIDEO_ADAPTER_VRAM_SIZE;
   _vram = (uint8 *) calloc(_vram_size, sizeof(uint8));
-  _palette_size = PDP_VIDEO_ADAPTER_IO_PALETTE_SIZE;
-  _palette = (uint16 *) calloc(_palette_size, sizeof(uint8));
-  _palette32 = (uint32 *)calloc(_palette_size, sizeof(uint32));
-  _mode = PDP_VIDEO_ADAPTER_MODE_4X3_4_BIT | PDP_VIDEO_ADAPTER_MODE_USE_PALETTE;
   reset();
 }
 
 PDPDisplayAdapter::~PDPDisplayAdapter() {
-  _palette_size = 0;
   _vram_size = 0;
-  free(_palette);
   free(_vram);
-  free(_palette32);
-  _palette = nullptr;
   _vram = nullptr;
-  _palette32 = nullptr;
 }
 
 void PDPDisplayAdapter::reset() {
   memset(_vram, 0, _vram_size * sizeof(uint8));
-  memset(_palette, 0, _palette_size * sizeof(uint8));
-  _mode = PDP_VIDEO_ADAPTER_MODE_4X3_4_BIT | PDP_VIDEO_ADAPTER_MODE_USE_PALETTE;
 }
 
 uint16 PDPDisplayAdapter::read_word(uint18 address, uint18 base_address) {
@@ -38,12 +27,6 @@ uint16 PDPDisplayAdapter::read_word(uint18 address, uint18 base_address) {
     uint16 result = _vram[address - PDP_VIDEO_ADAPTER_VRAM_ADDRESS + 1];
     result = (result << 8) | (_vram[address - PDP_VIDEO_ADAPTER_VRAM_ADDRESS]);
     return result;
-  } else if (address >= PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS
-      && address < PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS + PDP_VIDEO_ADAPTER_IO_PALETTE_SIZE) {
-    uint16 result = _palette[address - PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS];
-    return result;
-  } else if (address == PDP_VIDEO_ADAPTER_MODE_ADDRESS) {
-    return _mode;
   } else if (address == PDP_VIDEO_ADAPTER_IO_FUNCTION_ADDRESS) {
     throw new runtime_error("PDP Video Adapter IO Function register is write-only");
   } else if (address == PDP_VIDEO_ADAPTER_IO_ARGUMENT0_ADDRESS) {
@@ -60,19 +43,6 @@ void PDPDisplayAdapter::write_word(uint18 address, uint18 base_address, uint16 v
       && address < PDP_VIDEO_ADAPTER_VRAM_ADDRESS + PDP_VIDEO_ADAPTER_VRAM_SIZE) {
     _vram[address - PDP_VIDEO_ADAPTER_VRAM_ADDRESS] = (uint8) value;
     _vram[address - PDP_VIDEO_ADAPTER_VRAM_ADDRESS + 1] = (uint8) (value >> 8);
-  } else if (address >= PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS
-      && address < PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS + PDP_VIDEO_ADAPTER_IO_PALETTE_SIZE) {
-    _palette[(address - PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS) >> 1] = value;
-    int16 color16 = value;
-    uint r = (color16 >> 11) & 037,
-      g = (color16 >> 5) & 077,
-      b = (color16) & 037;
-    r = r * (255.0 / 31);
-    g = g * (255.0 / 63);
-    b = b * (255.0 / 31);
-    _palette32[(address - PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS) >> 1] = r << 16 | g << 8 | b;
-  } else if (address == PDP_VIDEO_ADAPTER_MODE_ADDRESS) {
-    _mode = (uint8) value;
   } else if (address == PDP_VIDEO_ADAPTER_IO_FUNCTION_ADDRESS) {
     execute_function(value);
   } else if (address == PDP_VIDEO_ADAPTER_IO_ARGUMENT0_ADDRESS) {
@@ -89,11 +59,6 @@ uint8 PDPDisplayAdapter::read_byte(uint18 address, uint18 base_address) {
       && address < PDP_VIDEO_ADAPTER_VRAM_ADDRESS + PDP_VIDEO_ADAPTER_VRAM_SIZE) {
     uint8 result = _vram[address - PDP_VIDEO_ADAPTER_VRAM_ADDRESS];
     return result;
-  } else if (address >= PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS
-      && address < PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS + PDP_VIDEO_ADAPTER_IO_PALETTE_SIZE) {
-    throw new runtime_error("PDPDisplayAdapter Palette doesn't support byte access");
-  } else if (address == PDP_VIDEO_ADAPTER_MODE_ADDRESS) {
-    return _mode;
   } else if (address == PDP_VIDEO_ADAPTER_IO_FUNCTION_ADDRESS) {
     throw new runtime_error("PDPDisplayAdapter IO Functions doesn't support byte access");
   } else if (address == PDP_VIDEO_ADAPTER_IO_ARGUMENT0_ADDRESS) {
@@ -109,11 +74,6 @@ void PDPDisplayAdapter::write_byte(uint18 address, uint18 base_address, uint8 va
   if (address >= PDP_VIDEO_ADAPTER_VRAM_ADDRESS
       && address < PDP_VIDEO_ADAPTER_VRAM_ADDRESS + PDP_VIDEO_ADAPTER_VRAM_SIZE) {
     _vram[address - PDP_VIDEO_ADAPTER_VRAM_ADDRESS] = value;
-  } else if (address >= PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS
-      && address < PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS + PDP_VIDEO_ADAPTER_IO_PALETTE_SIZE) {
-    throw new runtime_error("PDPDisplayAdapter Palette doesn't support byte access");
-  } else if (address == PDP_VIDEO_ADAPTER_MODE_ADDRESS) {
-    _mode = value;
   } else if (address == PDP_VIDEO_ADAPTER_IO_FUNCTION_ADDRESS) {
     throw new runtime_error("PDPDisplayAdapter IO Functions doesn't support byte access");
   } else if (address == PDP_VIDEO_ADAPTER_IO_ARGUMENT0_ADDRESS) {
@@ -133,8 +93,6 @@ void PDPDisplayAdapter::execute_function(uint16 opcode) {
     case 0110000: // CLEAR_SCREEN
       memset(_vram, operand8, _vram_size);
       break;
-    case 0100000: // PRINT_CHAR
-      break;
     case 0010000: // SET_PIXEL
       set_pixel(_arg0, _arg1, operand12);
       break;
@@ -142,44 +100,20 @@ void PDPDisplayAdapter::execute_function(uint16 opcode) {
 }
 
 uint16 PDPDisplayAdapter::get_width() {
-  switch (_mode & 0376) {
-    case PDP_VIDEO_ADAPTER_MODE_4X3_1_BIT:
-      return 588;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_2_BIT:
-      return 416;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_4_BIT:
-      return 292;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_8_BIT:
-      return 208;
-    default:
-      throw new runtime_error("Unsupported video mode");
-  }
+	return 400;
 }
 
 uint16 PDPDisplayAdapter::get_height() {
-  switch (_mode & 0376) {
-    case PDP_VIDEO_ADAPTER_MODE_4X3_1_BIT:
-      return 441;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_2_BIT:
-      return 312;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_4_BIT:
-      return 219;
-    case PDP_VIDEO_ADAPTER_MODE_4X3_8_BIT:
-      return 156;
-    default:
-      throw new runtime_error("Unsupported video mode");
-  }
+	return 300;
 }
 
 void PDPDisplayAdapter::set_pixel(uint16 x, uint16 y, uint8 color) {
-  uint16 pixel_index = x + y * get_width();
-  uint8 color_depth = (uint8)((_mode >> 1) + 1);
-  uint16 pixel_vram_offset = (uint16) (pixel_index * color_depth / 8);
-  uint16 pixel_vram_internal_offset = pixel_index - (uint16) (pixel_vram_offset * 8 / color_depth);
-  pixel_vram_internal_offset *= color_depth;
+  uint32 pixel_index = x + y * get_width();
+  uint16 pixel_vram_offset = pixel_index >> 2;
+  uint16 pixel_vram_internal_offset = (pixel_index % 4) << 1;
+  uint8 mask = (uint8) (0x3 << pixel_vram_internal_offset);
 
   uint8 new_color = _vram[pixel_vram_offset];
-  uint8 mask = (uint8) (((1 << color_depth) - 1) << pixel_vram_internal_offset);
   color = color << pixel_vram_internal_offset;
   color = color & mask;
   mask = ~mask;
@@ -189,43 +123,16 @@ void PDPDisplayAdapter::set_pixel(uint16 x, uint16 y, uint8 color) {
 }
 
 uint PDPDisplayAdapter::get_pixel(uint16 x, uint16 y) {
-  uint16 pixel_index = x + y * get_width();
-  uint8 color_depth = (uint8)((_mode >> 1) + 1);
-  uint16 pixel_vram_offset = (uint16)((pixel_index * color_depth) >> 3);
-  uint16 pixel_vram_internal_offset = pixel_index - (uint16)((pixel_vram_offset << 3) / color_depth);
-  pixel_vram_internal_offset *= color_depth;
-  uint color = 0;
+  uint32 pixel_index = x + y * get_width();
+  uint16 pixel_vram_offset = pixel_index >> 2;
+  uint16 pixel_vram_internal_offset = (pixel_index % 4) << 1;
+  uint8 mask = (uint8) (0x3 << pixel_vram_internal_offset);
 
-  uint8 mask = (uint8) (((1 << color_depth) - 1) << pixel_vram_internal_offset);
+  uint color = 0;
   color = _vram[pixel_vram_offset] & mask;
   color = color >> pixel_vram_internal_offset;
-
-  if ((_mode & 0001) == 0001) { // Palette mode
-    color = _palette32[color];
-  } else {
-    uint r, g, b;
-    switch (color_depth) {
-      case 1:
-        r = g = b = color << 7;
-        break;
-      case 2:
-        r = g = b = color << 6;
-        break;
-      case 4:
-        r = g = b = color << 4;
-        break;
-      case 8:
-        // TODO: Convert to RGB
-        r = g = b = color;
-        break;
-    }
-    color = r << 16 | g << 8 | b;
-  }
-  return color;
-}
-
-void PDPDisplayAdapter::print_char(uint16 x, uint16 y, uint8 char_code) {
-  // TODO: Implement print_char
+  color = color * 85;
+  return color << 16 | color << 8 | color;
 }
 
 vector<vector<int>> &PDPDisplayAdapter::get_video_buffer() {

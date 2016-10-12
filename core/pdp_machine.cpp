@@ -32,10 +32,7 @@ PDPMachine::PDPMachine(string rom_file) {
     PDPDisplayAdapter::PDP_VIDEO_ADAPTER_VRAM_ADDRESS,
     PDPDisplayAdapter::PDP_VIDEO_ADAPTER_VRAM_SIZE);
   _unibus->register_device(_display_adapter,
-    PDPDisplayAdapter::PDP_VIDEO_ADAPTER_IO_PALETTE_ADDRESS,
-    PDPDisplayAdapter::PDP_VIDEO_ADAPTER_IO_PALETTE_SIZE);
-  _unibus->register_device(_display_adapter,
-    PDPDisplayAdapter::PDP_VIDEO_ADAPTER_MODE_ADDRESS,
+    PDPDisplayAdapter::PDP_VIDEO_ADAPTER_IO_ADDRESS,
     PDPDisplayAdapter::PDP_VIDEO_ADAPTER_IO_SIZE);
 }
 
