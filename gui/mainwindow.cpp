@@ -1,20 +1,21 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <iostream>
+#include <QtWidgets/QFileDialog>
 #include "../core/pdp_machine.h"
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   _ui(new Ui::MainWindow) {
   _ui->setupUi(this);
-
+  _pdp_machine = nullptr;
 
   QGraphicsScene *scene = new QGraphicsScene();
   _ui->display_view->setScene(scene);
   _screen_graphics_item = new QGraphicsPixmapItem();
   _ui->display_view->scene()->addItem(_screen_graphics_item);
   _ui->display_view->show();
-
+  
   _clock_timer = new QTimer();
   _display_timer = new QTimer();
   _clock_timer->setInterval(0);
@@ -23,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(_display_timer, SIGNAL(timeout()), this, SLOT(display_update()));
   // _clock_timer->start();
   _display_timer->start();
+
 
   CPUStateTableView *cpu_state_view = new CPUStateTableView();
   cpu_state_view->addObject(std::make_pair("R0", 0));
@@ -110,7 +112,15 @@ void MainWindow::render_display(PDPDisplayAdapter *display_adapter) {
 }
 
 void MainWindow::on_load_rom_button_clicked() {
-
+	QString dir = QFileDialog::getOpenFileName(this,
+		"Open firmware file",
+		QString(), QString(), nullptr, 
+		QFileDialog::ReadOnly | QFileDialog::DontResolveSymlinks);
+	if (!dir.isNull()) {
+		PDPMachine *old_machine = this->_pdp_machine;
+		delete old_machine;
+		set_pdp_machine(new PDPMachine(dir.toStdString()));
+	}
 }
 
 void MainWindow::on_run_button_clicked() {
@@ -119,25 +129,38 @@ void MainWindow::on_run_button_clicked() {
 
 void MainWindow::on_step_button_clicked() {
   _clock_timer->stop();
-  _pdp_machine->execute_command();
+  if (_pdp_machine != nullptr)
+    _pdp_machine->execute_command();
 }
 
 void MainWindow::on_reset_button_clicked() {
-
+	if (_pdp_machine != nullptr) {
+		_clock_timer->stop();
+		_display_timer->stop();
+		string rom_file = _pdp_machine->get_rom_file_name();
+		delete _pdp_machine;
+		_pdp_machine = nullptr;
+		_pdp_machine = new PDPMachine(rom_file);
+		_display_timer->start();
+	}
 }
 
 void MainWindow::clock_update() {
-  _pdp_machine->execute_command();
-  if (_pdp_machine->is_halted()) {
-    std::cout << "PDP Machine halted" << std::endl;
-    _clock_timer->stop();
-  }
+	if (_pdp_machine != nullptr) {
+		_pdp_machine->execute_command();
+		if (_pdp_machine->is_halted()) {
+			std::cout << "PDP Machine halted" << std::endl;
+			_clock_timer->stop();
+		}
+	}
 }
 
 void MainWindow::display_update() {
   // _pdp_machine->get_video_buffer();
   // render_display(_pdp_machine->get_video_buffer());
-  render_display(_pdp_machine->get_display_adapter());
+	if (_pdp_machine != nullptr) {
+		render_display(_pdp_machine->get_display_adapter());
+	}
 }
 
 void MainWindow::on_jump_to_disasm_edit_returnPressed() {

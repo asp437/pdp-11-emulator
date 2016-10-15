@@ -11,7 +11,7 @@
 #include "io_devices/PDPTapeWriter.h"
 #include "io_devices/PDPDisplayAdapter.h"
 
-PDPMachine::PDPMachine(string rom_file) {
+PDPMachine::PDPMachine(string rom_file) : _rom_file_name(rom_file) {
   _unibus = new Unibus();
   _memory = new Memory(MEMORY_SIZE);
   _rom = new ROM(rom_file);
