@@ -105,6 +105,7 @@ void MainWindow::render_display(PDPDisplayAdapter *display_adapter) {
     }
   }
   _screen_graphics_item->setPixmap(QPixmap::fromImage(image));
+  _screen_graphics_item->setScale(2.0f);
   _ui->display_view->update();
 }
 

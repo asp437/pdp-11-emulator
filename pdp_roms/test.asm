@@ -1,0 +1,16 @@
+.SECTION .DATA
+    HELLO_STR: .STRING "HELLO, WORLD!"
+
+
+.SECTION .CODE
+.GLOBAL MAIN
+
+MAIN:
+    MOV 04, (01000)
+    CMP (01000), 04
+    BEQ END
+    inc (01000)
+    BR MAIN
+END:
+    HALT
+    

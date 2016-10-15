@@ -117,6 +117,7 @@ CPU::CPU() {
   // TODO: Initialize PC and PSW
   memset(_r, 0, sizeof(_r));
   _psw.ps = 0;
+  _r[6].r = 16 * 1024;
   _pc.r = 0140000;
 }
 
@@ -1022,13 +1023,15 @@ void CPU::opcode_jsr(uint16 opcode) {
   uint16 tmp16 = get_destination_value(opcode);
   uint16 reg_n = (uint16) ((opcode >> 6) & 07);
   stack_push(_r[reg_n].r);
-  _r[reg_n].r = _pc.r;
+  _r[reg_n].r = _pc.r + _pc_step;
+  _pc_step = 0;
   _pc.r = tmp16;
 }
 
 void CPU::opcode_rts(uint16 opcode) {
   uint16 reg_n = (uint16) (opcode & 07);
   _pc.r = _r[reg_n].r;
+  _pc_step = 0;
   _r[reg_n].r = stack_pop();
 }
 
