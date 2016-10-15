@@ -21,7 +21,7 @@ QVariant MemoryExplorerTableView::data(const QModelIndex &index, int role) const
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    if (index.column() >= 0 && index.column() <= 3)
+    if (index.column() >= 0)
         if (index.row() * 04 + index.column() < _data.size()) {
             std::stringstream stream;
             stream << std::oct << std::setfill('0') << std::setw(7) << _data.at(index.row() * 04 + index.column());
@@ -47,7 +47,7 @@ QVariant MemoryExplorerTableView::headerData(int section, Qt::Orientation orient
     }
     if (orientation == Qt::Orientation::Vertical && role == Qt::DisplayRole && section >= 0) {
         std::stringstream stream;
-        stream << std::oct << std::setfill('0') << std::setw(6) << section << "x";
+        stream << std::oct << std::setfill('0') << std::setw(6) << section + _base_address / 8 << "x";
         return QString(stream.str().c_str());
     }
     return QVariant();
@@ -62,5 +62,5 @@ QModelIndex MemoryExplorerTableView::parent(const QModelIndex &index) const {
 }
 
 int MemoryExplorerTableView::rowCount(const QModelIndex &parent) const {
-    return 2/*_data.size() / 4.0 + 1*/;
+	return _data.size() / 4.0 + 1;
 }

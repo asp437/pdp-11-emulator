@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
   MemoryExplorerTableView *memory_model = new MemoryExplorerTableView();
+  memory_model->setBaseAddress(0);
   std::vector<uint16_t> data;
   data.push_back(0000000);
   data.push_back(0000002);
@@ -122,9 +123,7 @@ void MainWindow::on_load_rom_button_clicked() {
 		string rom_file = dir.toStdString();
 		delete _pdp_machine;
 		_pdp_machine = nullptr;
-		_pdp_machine = new PDPMachine(rom_file);
-		_display_timer->start();
-		update_cpu_registers_view();
+		set_pdp_machine(new PDPMachine(rom_file));
 	}
 }
 
@@ -147,9 +146,7 @@ void MainWindow::on_reset_button_clicked() {
 		string rom_file = _pdp_machine->get_rom_file_name();
 		delete _pdp_machine;
 		_pdp_machine = nullptr;
-		_pdp_machine = new PDPMachine(rom_file);
-		_display_timer->start();
-		update_cpu_registers_view();
+		set_pdp_machine(new PDPMachine(rom_file));
 	}
 }
 
@@ -165,8 +162,6 @@ void MainWindow::clock_update() {
 }
 
 void MainWindow::display_update() {
-  // _pdp_machine->get_video_buffer();
-  // render_display(_pdp_machine->get_video_buffer());
 	if (_pdp_machine != nullptr) {
 		render_display(_pdp_machine->get_display_adapter());
 	}
@@ -177,7 +172,17 @@ void MainWindow::on_jump_to_disasm_edit_returnPressed() {
 }
 
 void MainWindow::on_jump_to_mem_edit_returnPressed() {
-
+	string offset_str = _ui->jump_to_mem_edit->text().toStdString();
+	int offset = stoi(offset_str, 0, 8);
+	offset = offset - (offset % 2);
+	MemoryExplorerTableView *memory_model = new MemoryExplorerTableView();
+	memory_model->setBaseAddress(offset);
+	std::vector<uint16_t> data;
+	for (int i = 0; i < 1024; i += 2) {
+		data.push_back(_pdp_machine->get_memory_word(offset + i));
+	}
+	memory_model->setObjects(data);
+	_ui->memory_explorer_table->setModel(memory_model);
 }
 
 void MainWindow::update_cpu_registers_view() {
@@ -195,9 +200,17 @@ void MainWindow::update_cpu_registers_view() {
 	cpu_state_view->addObject(std::make_pair("R7/PC", cpu_state.r[7]));
 	cpu_state_view->addObject(std::make_pair("PSW", cpu_state.psw));
 	cpu_state_view->addObject(std::make_pair("Int Pri", cpu_state.psw >> 4));
-	cpu_state_view->addObject(std::make_pair("N", (cpu_state.psw >> 0) & 1));
+	cpu_state_view->addObject(std::make_pair("C", (cpu_state.psw >> 0) & 1));
 	cpu_state_view->addObject(std::make_pair("V", (cpu_state.psw >> 1) & 1));
 	cpu_state_view->addObject(std::make_pair("Z", (cpu_state.psw >> 2) & 1));
-	cpu_state_view->addObject(std::make_pair("C", (cpu_state.psw >> 3) & 1));
+	cpu_state_view->addObject(std::make_pair("N", (cpu_state.psw >> 3) & 1));
 	_ui->cpu_state_table->setModel(cpu_state_view);
+}
+
+void MainWindow::set_pdp_machine(PDPMachine *pdp_machine) {
+	_pdp_machine = pdp_machine;
+	_display_timer->start();
+	update_cpu_registers_view();
+	_ui->jump_to_mem_edit->setText("0000000");
+	on_jump_to_mem_edit_returnPressed();
 }

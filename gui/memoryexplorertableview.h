@@ -24,7 +24,9 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
 
     void setObjects(std::vector<uint16_t> data) { this->_data = data; }
+	void setBaseAddress(int base) { _base_address = base; }
 private:
+	int _base_address;
     std::vector<uint16_t> _data;
 };
 

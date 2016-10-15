@@ -22,7 +22,7 @@ class MainWindow : public QMainWindow
 public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
-  void set_pdp_machine(PDPMachine *pdp_machine) { this->_pdp_machine = pdp_machine; }
+  void set_pdp_machine(PDPMachine *pdp_machine);
   void render_display(std::vector< std::vector<int> > &buffer);
   void render_display(PDPDisplayAdapter *display_adapter);
 public slots:
