@@ -28,19 +28,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
   CPUStateTableView *cpu_state_view = new CPUStateTableView();
   cpu_state_view->addObject(std::make_pair("R0", 0));
-  cpu_state_view->addObject(std::make_pair("R1", 1));
-  cpu_state_view->addObject(std::make_pair("R2", 2));
-  cpu_state_view->addObject(std::make_pair("R3", 3));
-  cpu_state_view->addObject(std::make_pair("R4", 4));
-  cpu_state_view->addObject(std::make_pair("R5", 5));
-  cpu_state_view->addObject(std::make_pair("R6/SP", 1));
-  cpu_state_view->addObject(std::make_pair("R7/PC", 2));
-  cpu_state_view->addObject(std::make_pair("PSW", 3));
-  cpu_state_view->addObject(std::make_pair("Int Pri", 3));
-  cpu_state_view->addObject(std::make_pair("N", 1));
-  cpu_state_view->addObject(std::make_pair("V", 1));
-  cpu_state_view->addObject(std::make_pair("Z", 1));
-  cpu_state_view->addObject(std::make_pair("C", 1));
+  cpu_state_view->addObject(std::make_pair("R1", 0));
+  cpu_state_view->addObject(std::make_pair("R2", 0));
+  cpu_state_view->addObject(std::make_pair("R3", 0));
+  cpu_state_view->addObject(std::make_pair("R4", 0));
+  cpu_state_view->addObject(std::make_pair("R5", 0));
+  cpu_state_view->addObject(std::make_pair("R6/SP", 0));
+  cpu_state_view->addObject(std::make_pair("R7/PC", 0));
+  cpu_state_view->addObject(std::make_pair("PSW", 0));
+  cpu_state_view->addObject(std::make_pair("Int Pri", 0));
+  cpu_state_view->addObject(std::make_pair("N", 0));
+  cpu_state_view->addObject(std::make_pair("V", 0));
+  cpu_state_view->addObject(std::make_pair("Z", 0));
+  cpu_state_view->addObject(std::make_pair("C", 0));
 
   _ui->cpu_state_table->setModel(cpu_state_view);
   _ui->cpu_state_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -117,9 +117,14 @@ void MainWindow::on_load_rom_button_clicked() {
 		QString(), QString(), nullptr, 
 		QFileDialog::ReadOnly | QFileDialog::DontResolveSymlinks);
 	if (!dir.isNull()) {
-		PDPMachine *old_machine = this->_pdp_machine;
-		delete old_machine;
-		set_pdp_machine(new PDPMachine(dir.toStdString()));
+		_clock_timer->stop();
+		_display_timer->stop();
+		string rom_file = dir.toStdString();
+		delete _pdp_machine;
+		_pdp_machine = nullptr;
+		_pdp_machine = new PDPMachine(rom_file);
+		_display_timer->start();
+		update_cpu_registers_view();
 	}
 }
 
@@ -129,8 +134,10 @@ void MainWindow::on_run_button_clicked() {
 
 void MainWindow::on_step_button_clicked() {
   _clock_timer->stop();
-  if (_pdp_machine != nullptr)
-    _pdp_machine->execute_command();
+  if (_pdp_machine != nullptr) {
+	  _pdp_machine->execute_command();
+	  update_cpu_registers_view();
+  }
 }
 
 void MainWindow::on_reset_button_clicked() {
@@ -142,6 +149,7 @@ void MainWindow::on_reset_button_clicked() {
 		_pdp_machine = nullptr;
 		_pdp_machine = new PDPMachine(rom_file);
 		_display_timer->start();
+		update_cpu_registers_view();
 	}
 }
 
@@ -151,6 +159,7 @@ void MainWindow::clock_update() {
 		if (_pdp_machine->is_halted()) {
 			std::cout << "PDP Machine halted" << std::endl;
 			_clock_timer->stop();
+			update_cpu_registers_view();
 		}
 	}
 }
@@ -169,4 +178,26 @@ void MainWindow::on_jump_to_disasm_edit_returnPressed() {
 
 void MainWindow::on_jump_to_mem_edit_returnPressed() {
 
+}
+
+void MainWindow::update_cpu_registers_view() {
+	if (_pdp_machine == nullptr)
+		return;
+	CPUState cpu_state = _pdp_machine->get_cpu_state();
+	CPUStateTableView *cpu_state_view = new CPUStateTableView();
+	cpu_state_view->addObject(std::make_pair("R0", cpu_state.r[0]));
+	cpu_state_view->addObject(std::make_pair("R1", cpu_state.r[1]));
+	cpu_state_view->addObject(std::make_pair("R2", cpu_state.r[2]));
+	cpu_state_view->addObject(std::make_pair("R3", cpu_state.r[3]));
+	cpu_state_view->addObject(std::make_pair("R4", cpu_state.r[4]));
+	cpu_state_view->addObject(std::make_pair("R5", cpu_state.r[5]));
+	cpu_state_view->addObject(std::make_pair("R6/SP", cpu_state.r[6]));
+	cpu_state_view->addObject(std::make_pair("R7/PC", cpu_state.r[7]));
+	cpu_state_view->addObject(std::make_pair("PSW", cpu_state.psw));
+	cpu_state_view->addObject(std::make_pair("Int Pri", cpu_state.psw >> 4));
+	cpu_state_view->addObject(std::make_pair("N", (cpu_state.psw >> 0) & 1));
+	cpu_state_view->addObject(std::make_pair("V", (cpu_state.psw >> 1) & 1));
+	cpu_state_view->addObject(std::make_pair("Z", (cpu_state.psw >> 2) & 1));
+	cpu_state_view->addObject(std::make_pair("C", (cpu_state.psw >> 3) & 1));
+	_ui->cpu_state_table->setModel(cpu_state_view);
 }

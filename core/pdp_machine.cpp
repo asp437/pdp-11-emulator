@@ -59,7 +59,11 @@ uint16 PDPMachine::get_memory_word(uint18 address) {
 }
 
 CPUState PDPMachine::get_cpu_state() {
-  return CPUState();
+  CPUState state;
+  for (int i = 0; i < 8; i++)
+    state.r[i] = _cpu->get_register(i).r;
+  state.psw = _cpu->get_psw().ps;
+  return state;
 }
 
 bool PDPMachine::is_halted() {

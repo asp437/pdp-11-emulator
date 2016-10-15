@@ -1129,3 +1129,11 @@ void CPU::opcode_cco(uint16 opcode) {
   if ((opcode & 0000010) == 0000010)
     _psw.N = val;
 }
+
+Register CPU::get_register(int i) {
+	return _r[i];
+}
+
+PSW CPU::get_psw() {
+	return _psw;
+}

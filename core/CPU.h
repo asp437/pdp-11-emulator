@@ -53,6 +53,8 @@ public:
   void interrupt(uint18 address) override;
   bool is_busy() override { return false; }
   bool is_halted() { return _halted; }
+  Register get_register(int i);
+  PSW get_psw();
 
   static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
   static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 077;

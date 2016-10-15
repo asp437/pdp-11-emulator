@@ -17,8 +17,8 @@ class PDPTapeWriter;
 class PDPDisplayAdapter;
 
 struct CPUState {
-  uint16 r[8];
-  uint16 psw;
+	uint16 r[8];
+	uint16 psw;
 };
 
 class PDPMachine {

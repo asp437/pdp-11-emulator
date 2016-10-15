@@ -38,6 +38,8 @@ public slots:
   void on_jump_to_mem_edit_returnPressed();
 
 private:
+  void update_cpu_registers_view();
+
   QGraphicsPixmapItem *_screen_graphics_item;
   Ui::MainWindow *_ui;
   QTimer *_clock_timer;
