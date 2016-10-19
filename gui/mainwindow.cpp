@@ -161,6 +161,7 @@ void MainWindow::on_jump_to_disasm_edit_returnPressed() {
     _ui->disasm_table->setColumnWidth(1, 300);
     _ui->disasm_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     _ui->disasm_table->horizontalHeader()->setSectionsClickable(false);
+    _ui->disasm_table->setFocus();
 }
 
 void MainWindow::on_jump_to_mem_edit_returnPressed() {

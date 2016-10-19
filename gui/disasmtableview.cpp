@@ -67,6 +67,7 @@ int DisasmTableView::rowCount(const QModelIndex &parent) const {
 }
 
 void DisasmTableView::setObjects(uint base_address, std::vector<std::pair<std::string, uint16>> &rows) {
+    _rows.clear();
     uint current_address = base_address;
     for (auto it = rows.begin(); it != rows.end(); ++it) {
         pair<string, uint> instruction = *it;

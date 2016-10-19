@@ -354,8 +354,9 @@ void CPU::stack_push(uint16 value) {
 }
 
 uint16 CPU::stack_pop() {
-    return _unibus->read_word(_sp.r);
+    uint16 val = _unibus->read_word(_sp.r);
     _sp.r += 2;
+    return val;
 }
 
 void CPU::execute() {
@@ -384,6 +385,7 @@ void CPU::interrupt(uint18 address) {
     stack_push(_pc.r);
     _pc.r = _unibus->read_word(address);
     _psw.ps = (uint8) _unibus->read_word(address + 2);
+    _pc_step = 0;
 }
 
 void CPU::opcode_clr(uint16 opcode) {
@@ -917,6 +919,7 @@ void CPU::opcode_emt(uint16 opcode) { // TODO: Check this instruction
     stack_push(_pc.r);
     _pc.r = _unibus->read_word(030);
     _psw.ps = (uint8) _unibus->read_word(032);
+    _pc_step = 0;
 }
 
 void CPU::opcode_trap(uint16 opcode) { // TODO: Check this instruction
@@ -924,6 +927,7 @@ void CPU::opcode_trap(uint16 opcode) { // TODO: Check this instruction
     stack_push(_pc.r);
     _pc.r = _unibus->read_word(034);
     _psw.ps = (uint8) _unibus->read_word(036);
+    _pc_step = 0;
 }
 
 void CPU::opcode_bpt(uint16 opcode) { // TODO: Check this instruction
@@ -931,6 +935,7 @@ void CPU::opcode_bpt(uint16 opcode) { // TODO: Check this instruction
     stack_push(_pc.r);
     _pc.r = _unibus->read_word(014);
     _psw.ps = (uint8) _unibus->read_word(016);
+    _pc_step = 0;
 }
 
 void CPU::opcode_iot(uint16 opcode) { // TODO: Check this instruction
@@ -938,16 +943,19 @@ void CPU::opcode_iot(uint16 opcode) { // TODO: Check this instruction
     stack_push(_pc.r);
     _pc.r = _unibus->read_word(020);
     _psw.ps = (uint8) _unibus->read_word(022);
+    _pc_step = 0;
 }
 
 void CPU::opcode_rti(uint16 opcode) { // TODO: Check this instruction
     _pc.r = stack_pop();
     _psw.ps = (uint8) stack_pop();
+    _pc_step = 0;
 }
 
 void CPU::opcode_rtt(uint16 opcode) { // TODO: Check this instruction
     _pc.r = stack_pop();
     _psw.ps = (uint8) stack_pop();
+    _pc_step = 0;
 }
 
 void CPU::opcode_halt(uint16 opcode) {
@@ -957,7 +965,7 @@ void CPU::opcode_halt(uint16 opcode) {
 }
 
 void CPU::opcode_wait(uint16 opcode) {
-//  _waiting = true;
+    _waiting = true;
 }
 
 void CPU::opcode_reset(uint16 opcode) {
