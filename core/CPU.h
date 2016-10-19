@@ -38,6 +38,15 @@ struct CPUInstruction {
     void (CPU::*opcode_func)(uint16);
 };
 
+const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0177700;
+const uint16 DOUBLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0170000;
+const uint16 REGISTER_ONLY_INSTRUCTION_MASK = (const uint16) 0177770;
+const uint16 REGISTER_OPERAND_INSTRUCTION_MASK = (const uint16) 0177000;
+const uint16 NO_OPERANDS_INSTRUCTION_MASK = (const uint16) 0177777;
+const uint16 CONDITION_CODE_INSTRUCTION_MASK = (const uint16) 0177740;
+const uint16 BRANCHING_OFFSET_INSTRUCTION_MASK = (const uint16) 0177400;
+const uint16 BRANCHING_OFFSET_MASK = (const uint16) 0000377;
+
 class CPU : public UnibusDevice {
 public:
     CPU();
@@ -55,6 +64,7 @@ public:
     bool is_halted() { return _halted; }
     Register get_register(int i);
     PSW get_psw();
+    vector<CPUInstruction> get_instruction_set() { return _instruction_set; }
 
     static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
     static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 077;
@@ -63,7 +73,6 @@ private:
                               uint16 opcode_mask,
                               uint16 opcode_signature,
                               void(CPU::*opcode_f)(uint16));
-    string disasm(uint16 opcode);
 
     void set_value(uint8 mode,
                    uint8 address,

@@ -21,5 +21,7 @@ set(SOURCE_FILES ${SOURCE_FILES} gui/mainwindow.cpp gui/mainwindow.h gui/moc_mai
 set(SOURCE_FILES ${SOURCE_FILES} gui/cpustatetableview.cpp gui/cpustatetableview.h gui/moc_cpustatetableview.cpp)
 set(SOURCE_FILES ${SOURCE_FILES} gui/disasmtableview.cpp gui/disasmtableview.h gui/moc_disasmtableview.cpp)
 set(SOURCE_FILES ${SOURCE_FILES} gui/memoryexplorertableview.cpp gui/memoryexplorertableview.h gui/moc_memoryexplorertableview.cpp)
+set(SOURCE_FILES ${SOURCE_FILES} core/DisAsm.cpp core/DisAsm.h)
+
 add_executable(pdp_11_emulator ${SOURCE_FILES})
 qt5_use_modules(pdp_11_emulator Core Widgets Gui)

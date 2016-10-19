@@ -44,20 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
     _ui->cpu_state_table->setModel(cpu_state_view);
     _ui->cpu_state_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
-    DisasmTableView *disasm_view = new DisasmTableView();
-    disasm_view->addObject(std::make_pair(0140000, "CLR R0"));
-    disasm_view->addObject(std::make_pair(0140002, "CLR R1"));
-    disasm_view->addObject(std::make_pair(0140004, "CLR R2"));
-    disasm_view->addObject(std::make_pair(0140006, "CLR R3"));
-    disasm_view->addObject(std::make_pair(0140010, "MOV (01000), R4"));
-    disasm_view->addObject(std::make_pair(0140012, "MOV (01002), R5"));
-    disasm_view->addObject(std::make_pair(0140014, "ADD R4, R3"));
-    disasm_view->addObject(std::make_pair(0140016, "ADD R5, R3"));
-    _ui->disasm_table->setModel(disasm_view);
-    _ui->disasm_table->setColumnWidth(1, 300);
-    _ui->disasm_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    _ui->disasm_table->horizontalHeader()->setSectionsClickable(false);
-    disasm_view->select_row(3);
+    _diasm_table_view = new DisasmTableView();
 
     MemoryExplorerTableView *memory_model = new MemoryExplorerTableView();
     memory_model->setBaseAddress(0);
@@ -165,7 +152,14 @@ void MainWindow::display_update() {
 }
 
 void MainWindow::on_jump_to_disasm_edit_returnPressed() {
-
+    string offset_str = _ui->jump_to_disasm_edit->text().toStdString();
+    uint18 offset = (uint18) stoi(offset_str, 0, 8);
+    std::vector<pair<string, uint16>> disasm_result = _pdp_machine->get_disasm(offset, 256);
+    _diasm_table_view->setObjects(offset, disasm_result);
+    _ui->disasm_table->setModel(_diasm_table_view);
+    _ui->disasm_table->setColumnWidth(1, 300);
+    _ui->disasm_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    _ui->disasm_table->horizontalHeader()->setSectionsClickable(false);
 }
 
 void MainWindow::on_jump_to_mem_edit_returnPressed() {
@@ -202,12 +196,17 @@ void MainWindow::update_cpu_registers_view() {
     cpu_state_view->addObject(std::make_pair("Z", (cpu_state.psw >> 2) & 1));
     cpu_state_view->addObject(std::make_pair("N", (cpu_state.psw >> 3) & 1));
     _ui->cpu_state_table->setModel(cpu_state_view);
+
+    _diasm_table_view->setCurrentAddress(cpu_state.r[7]);
+    _ui->disasm_table->setFocus();
 }
 
 void MainWindow::set_pdp_machine(PDPMachine *pdp_machine) {
     _pdp_machine = pdp_machine;
     _display_timer->start();
     update_cpu_registers_view();
-    _ui->jump_to_mem_edit->setText("0000000");
+    _ui->jump_to_mem_edit->setText("000000");
     on_jump_to_mem_edit_returnPressed();
+    _ui->jump_to_disasm_edit->setText("140000");
+    on_jump_to_disasm_edit_returnPressed();
 }

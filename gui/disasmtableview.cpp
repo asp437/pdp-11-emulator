@@ -7,7 +7,6 @@
 
 DisasmTableView::DisasmTableView(QObject *parent)
     : QAbstractItemModel(parent) {
-    _selected_row = -1;
 }
 
 DisasmTableView::~DisasmTableView() {
@@ -22,7 +21,7 @@ QVariant DisasmTableView::data(const QModelIndex &index, int role) const {
     if (_rows.size() <= 0)
         return QVariant();
     if (role == Qt::BackgroundRole) {
-        if (index.row() == _selected_row)
+        if (_rows[index.row()].first == _current_address)
             return QBrush(QColor(82, 179, 217));
         else
             return QBrush(QColor(255, 255, 255));
@@ -36,7 +35,7 @@ QVariant DisasmTableView::data(const QModelIndex &index, int role) const {
         stream << std::oct << std::setfill('0') << std::setw(7) << _rows.at(index.row()).first;
         return QString(stream.str().c_str());
     } else if (index.column() == 1)
-        return QString(_rows.at(index.row()).second.c_str());
+        return QString(_rows.at(index.row()).second.first.c_str());
     else
         return QVariant();
 }
@@ -67,6 +66,11 @@ int DisasmTableView::rowCount(const QModelIndex &parent) const {
     return _rows.size();
 }
 
-void DisasmTableView::addObject(std::pair<uint, std::string> value) {
-    _rows.push_back(value);
+void DisasmTableView::setObjects(uint base_address, std::vector<std::pair<std::string, uint16>> &rows) {
+    uint current_address = base_address;
+    for (auto it = rows.begin(); it != rows.end(); ++it) {
+        pair<string, uint> instruction = *it;
+        _rows.push_back(make_pair(current_address, instruction));
+        current_address += instruction.second;
+    }
 }

@@ -40,6 +40,7 @@ private:
     void update_cpu_registers_view();
 
     QGraphicsPixmapItem *_screen_graphics_item;
+    DisasmTableView *_diasm_table_view;
     Ui::MainWindow *_ui;
     QTimer *_clock_timer;
     QTimer *_display_timer;

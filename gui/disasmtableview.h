@@ -7,6 +7,7 @@
 #include <QVariant>
 #include <vector>
 #include <utility>
+#include "../common.h"
 
 class DisasmTableView : public QAbstractItemModel {
 Q_OBJECT
@@ -22,14 +23,13 @@ public:
     QModelIndex parent(const QModelIndex &index) const Q_DECL_OVERRIDE;
     int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     int columnCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
-    int get_selected_row() { return _selected_row; }
-    void select_row(int row) { _selected_row = row; }
 
-    void addObject(std::pair<uint, std::string> value);
-    void setObjects(std::vector<std::pair<uint, std::string> > rows) { this->_rows = rows; }
+    void setCurrentAddress(uint16 current_address) { _current_address = current_address; }
+    void setObjects(uint base_address, std::vector<std::pair<std::string, uint16>> &rows);
 private:
-    std::vector<std::pair<uint, std::string> > _rows;
+    std::vector<std::pair<uint, std::pair<std::string, uint16>>> _rows;
     int _selected_row;
+    uint16 _current_address;
 };
 
 #endif // DISASMTABLEVIEW_H

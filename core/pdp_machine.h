@@ -15,6 +15,7 @@ class CPU;
 class PDPKeyboard;
 class PDPTapeWriter;
 class PDPDisplayAdapter;
+class DisAsm;
 
 struct CPUState {
     uint16 r[8];
@@ -33,6 +34,7 @@ public:
     PDPDisplayAdapter *get_display_adapter() { return _display_adapter; }
     bool is_halted();
     string get_rom_file_name() { return _rom_file_name; }
+    vector<pair<string, uint16>> get_disasm(uint18 address, uint18 size);
 
     static const uint18 MEMORY_SIZE = 16 * 1024;
 private:
@@ -44,6 +46,7 @@ private:
     PDPKeyboard *_keyboard;
     PDPTapeWriter *_tape_writer;
     PDPDisplayAdapter *_display_adapter;
+    DisAsm *_disasm;
 };
 
 #endif // PDP_11_EMULATOR_PDP_MACHINE_H

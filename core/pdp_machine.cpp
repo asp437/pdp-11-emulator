@@ -7,6 +7,7 @@
 #include "Memory.h"
 #include "CPU.h"
 #include "ROM.h"
+#include "DisAsm.h"
 #include "io_devices/PDPKeyboard.h"
 #include "io_devices/PDPTapeWriter.h"
 #include "io_devices/PDPDisplayAdapter.h"
@@ -34,6 +35,8 @@ PDPMachine::PDPMachine(string rom_file) : _rom_file_name(rom_file) {
     _unibus->register_device(_display_adapter,
                              PDPDisplayAdapter::PDP_VIDEO_ADAPTER_IO_ADDRESS,
                              PDPDisplayAdapter::PDP_VIDEO_ADAPTER_IO_SIZE);
+    _disasm = new DisAsm(_unibus, _cpu->get_instruction_set());
+    // disasm.disasm_code(0140000, 128);
 }
 
 PDPMachine::~PDPMachine() {
@@ -68,4 +71,7 @@ CPUState PDPMachine::get_cpu_state() {
 
 bool PDPMachine::is_halted() {
     return _cpu->is_halted();
+}
+vector<pair<string, uint16>> PDPMachine::get_disasm(uint18 address, uint18 size) {
+    return _disasm->disasm_code(address, size);
 }

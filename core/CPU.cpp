@@ -7,15 +7,6 @@
 #include <iomanip>
 #include <cstring>
 
-const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0177700;
-const uint16 DOUBLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0170000;
-const uint16 REGISTER_ONLY_INSTRUCTION_MASK = (const uint16) 0177770;
-const uint16 REGISTER_OPERAND_INSTRUCTION_MASK = (const uint16) 0177000;
-const uint16 NO_OPERANDS_INSTRUCTION_MASK = (const uint16) 0177777;
-const uint16 CONDITION_CODE_INSTRUCTION_MASK = (const uint16) 0177740;
-const uint16 BRANCHING_OFFSET_INSTRUCTION_MASK = (const uint16) 0177400;
-const uint16 BRANCHING_OFFSET_MASK = (const uint16) 0000377;
-
 CPU::CPU() {
     // Single Operand Instructions
     register_instruction("CLR", SINGLE_OPERAND_INSTRUCTION_MASK, 0005000, &CPU::opcode_clr);
@@ -96,17 +87,6 @@ CPU::CPU() {
     register_instruction("HALT", NO_OPERANDS_INSTRUCTION_MASK, 0000000, &CPU::opcode_halt);
     register_instruction("WAIT", NO_OPERANDS_INSTRUCTION_MASK, 0000001, &CPU::opcode_wait);
     register_instruction("RESET", NO_OPERANDS_INSTRUCTION_MASK, 0000005, &CPU::opcode_reset);
-    // register_instruction("NOP", NO_OPERANDS_INSTRUCTION_MASK, 0000240, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("CLN", NO_OPERANDS_INSTRUCTION_MASK, 0000250, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("CLZ", NO_OPERANDS_INSTRUCTION_MASK, 0000244, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("CLV", NO_OPERANDS_INSTRUCTION_MASK, 0000242, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("CLC", NO_OPERANDS_INSTRUCTION_MASK, 0000241, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("CCC", NO_OPERANDS_INSTRUCTION_MASK, 0000257, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("SEN", NO_OPERANDS_INSTRUCTION_MASK, 0000270, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("SEZ", NO_OPERANDS_INSTRUCTION_MASK, 0000264, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("SEV", NO_OPERANDS_INSTRUCTION_MASK, 0000262, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("SEC", NO_OPERANDS_INSTRUCTION_MASK, 0000261, &CPU::opcode_cco); // Used for disasm mnemonic
-    // register_instruction("SCC", NO_OPERANDS_INSTRUCTION_MASK, 0000277, &CPU::opcode_cco); // Used for disasm mnemonic
     register_instruction("CCO", CONDITION_CODE_INSTRUCTION_MASK, 0000240, &CPU::opcode_cco);
 
     cout << "CPU initialization complete. Totally registered " << _instruction_set.size() << " instructions." << endl;
@@ -173,111 +153,6 @@ void CPU::register_instruction(string mnemonic,
          << opcode_signature << ") registered." << endl;
     cout << setfill(' ') << setw(0);
     cout.flags(cout_flags);
-}
-
-string CPU::disasm(uint16 opcode) {
-    string result = "";
-    for (auto instruction_it = _instruction_set.begin(); instruction_it != _instruction_set.end();
-         ++instruction_it) {
-        // TODO: Optimize execution, combine opcodes wrt. masks
-        if ((opcode & instruction_it->opcode_mask) == instruction_it->opcode_signature) {
-            result += to_string(_pc.r - 2) + ": ";
-            result += instruction_it->mnemonic + " ";
-            uint16 index_offset = 0;
-            if (instruction_it->opcode_mask == DOUBLE_OPERAND_INSTRUCTION_MASK) {
-                uint8 mode = (uint8) ((opcode & 0007000) >> 9);
-                uint8 address = (uint8) ((opcode & 0000700) >> 6);
-                bool src_follow_instr = ((opcode & 0070000) != 0 && mode >= 6) || (opcode & 0000700) == 0000700;
-                index_offset = (uint16) (src_follow_instr ? 2 : 0); // Double Operand Instructions check
-                uint16 val = 0;
-                switch (mode) {
-                    case 0:result += "R" + to_string(address);
-                        break;
-                    case 1:result += "@(R" + to_string(address);
-                        result += ")";
-                        break;
-                    case 2:result += "(R" + to_string(address);
-                        result += ")+";
-                        break;
-                    case 3:result += "@(R" + to_string(address);
-                        result += ")+";
-                        break;
-                    case 4:result += "-(R" + to_string(address);
-                        result += ")";
-                        break;
-                    case 5:result += "@-(R" + to_string(address);
-                        result += ")";
-                        break;
-                    case 6:val = _unibus->read_word(_pc.r);
-                        result += to_string(val) + "(R" + to_string(address);
-                        result += ")";
-                        break;
-                    case 7:val = _unibus->read_word(_pc.r);
-                        result += "@" + to_string(val);
-                        result += "(R" + to_string(address);
-                        result += ")";
-                        break;
-                }
-                result += ", ";
-            }
-            if (instruction_it->opcode_mask == SINGLE_OPERAND_INSTRUCTION_MASK ||
-                instruction_it->opcode_mask == DOUBLE_OPERAND_INSTRUCTION_MASK ||
-                instruction_it->opcode_mask == REGISTER_OPERAND_INSTRUCTION_MASK) {
-                uint8 mode = ((uint8) (opcode & 0000070)) >> 3;
-                uint8 address = (uint8) (opcode & 0000007);
-                uint16 val = 0;
-                switch (mode) {
-                    case 0:result += "R" + to_string(address);
-                        break;
-                    case 1:result += "@(R" + to_string(address);
-                        result += ")";
-                        break;
-                    case 2:result += "(R" + to_string(address);
-                        result += ")+";
-                        break;
-                    case 3:result += "@(R" + to_string(address);
-                        result += ")+";
-                        break;
-                    case 4:result += "-(R" + to_string(address);
-                        result += ")";
-                        break;
-                    case 5:result += "@-(R" + to_string(address);
-                        result += ")";
-                        break;
-                    case 6:val = _unibus->read_word(_pc.r + index_offset);
-                        result += to_string(val) + "(R" + to_string(address);
-                        result += ")";
-                        break;
-                    case 7:val = _unibus->read_word(_pc.r + index_offset);
-                        result += "@" + to_string(val);
-                        result += "(R" + to_string(address);
-                        result += ")";
-                        break;
-                }
-            } else if (instruction_it->opcode_mask == REGISTER_ONLY_INSTRUCTION_MASK) {
-                uint8 address = (uint8) (opcode & 0000007);
-                result += "R" + to_string(address);
-            } else if (instruction_it->opcode_mask == REGISTER_OPERAND_INSTRUCTION_MASK) {
-                uint8 address = (uint8) (opcode & 0000700);
-                result += ", R" + to_string(address);
-            } else if (instruction_it->opcode_mask == CONDITION_CODE_INSTRUCTION_MASK) {
-                result += (uint8) ((opcode >> 4) & 1) == 1 ? "SET " : "CLR ";
-                if ((opcode & 0000001) == 0000001)
-                    result += "C ";
-                if ((opcode & 0000002) == 0000002)
-                    result += "C ";
-                if ((opcode & 0000004) == 0000004)
-                    result += "Z ";
-                if ((opcode & 0000010) == 0000010)
-                    result += "N ";
-            } else if (instruction_it->opcode_mask == BRANCHING_OFFSET_INSTRUCTION_MASK) {
-                int8 offset = (int8) (opcode & BRANCHING_OFFSET_MASK);
-                offset >>= 1;
-                result += to_string(offset);
-            }
-        }
-    }
-    return result;
 }
 
 void CPU::set_value(uint8 mode,

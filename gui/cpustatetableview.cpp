@@ -1,5 +1,6 @@
 #include "cpustatetableview.h"
 #include <iostream>
+#include <sstream>
 
 CPUStateTableView::CPUStateTableView(QObject *parent)
     : QAbstractItemModel(parent) {
@@ -22,9 +23,11 @@ QVariant CPUStateTableView::data(const QModelIndex &index, int role) const {
 
     if (index.column() == 0)
         return QString(_rows.at(index.row()).first.c_str());
-    else if (index.column() == 1)
-        return _rows.at(index.row()).second;
-    else
+    else if (index.column() == 1) {
+        std::stringstream ss;
+        ss << std::oct << _rows.at(index.row()).second;
+        return QString(ss.str().c_str());
+    } else
         return QVariant();
 }
 

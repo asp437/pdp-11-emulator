@@ -6,11 +6,14 @@
 .GLOBAL MAIN
 
 MAIN:
-    MOV 04, (01000)
-    CMP (01000), 04
-    BEQ END
-    inc (01000)
-    BR MAIN
+    SEC
+    CLC
+    SEV
+    CLV
+    SEZ
+    CLZ
+    SEN
+    CLN
 END:
     HALT
     
