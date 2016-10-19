@@ -42,7 +42,7 @@ Qt::ItemFlags MemoryExplorerTableView::flags(const QModelIndex &index) const {
 QVariant MemoryExplorerTableView::headerData(int section, Qt::Orientation orientation, int role) const {
     if (orientation == Qt::Orientation::Horizontal && role == Qt::DisplayRole && section >= 0 && section <= 3) {
         std::stringstream stream;
-        stream << "xxxxxx" << std::oct << section * 02 ;
+        stream << "xxxxxx" << std::oct << section * 02;
         return QString(stream.str().c_str());
     }
     if (orientation == Qt::Orientation::Vertical && role == Qt::DisplayRole && section >= 0) {
@@ -62,5 +62,5 @@ QModelIndex MemoryExplorerTableView::parent(const QModelIndex &index) const {
 }
 
 int MemoryExplorerTableView::rowCount(const QModelIndex &parent) const {
-	return _data.size() / 4.0 + 1;
+    return _data.size() / 4.0 + 1;
 }

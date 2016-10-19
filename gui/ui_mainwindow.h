@@ -25,8 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Ui_MainWindow
-{
+class Ui_MainWindow {
 public:
     QWidget *centralWidget;
     QGraphicsView *display_view;
@@ -45,8 +44,7 @@ public:
     QPushButton *step_button;
     QPushButton *reset_button;
 
-    void setupUi(QMainWindow *MainWindow)
-    {
+    void setupUi(QMainWindow *MainWindow) {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
         MainWindow->resize(1176, 509);
@@ -137,8 +135,7 @@ public:
         QMetaObject::connectSlotsByName(MainWindow);
     } // setupUi
 
-    void retranslateUi(QMainWindow *MainWindow)
-    {
+    void retranslateUi(QMainWindow *MainWindow) {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
         cpu_state_box->setTitle(QApplication::translate("MainWindow", "CPU State", 0));
         disasm_box->setTitle(QApplication::translate("MainWindow", "DisAsm", 0));
@@ -158,7 +155,7 @@ public:
 };
 
 namespace Ui {
-    class MainWindow: public Ui_MainWindow {};
+class MainWindow : public Ui_MainWindow {};
 } // namespace Ui
 
 QT_END_NAMESPACE

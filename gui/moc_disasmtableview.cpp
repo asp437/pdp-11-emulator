@@ -29,7 +29,7 @@ struct qt_meta_stringdata_DisasmTableView_t {
     )
 static const qt_meta_stringdata_DisasmTableView_t qt_meta_stringdata_DisasmTableView = {
     {
-QT_MOC_LITERAL(0, 0, 15) // "DisasmTableView"
+        QT_MOC_LITERAL(0, 0, 15) // "DisasmTableView"
 
     },
     "DisasmTableView"
@@ -38,22 +38,21 @@ QT_MOC_LITERAL(0, 0, 15) // "DisasmTableView"
 
 static const uint qt_meta_data_DisasmTableView[] = {
 
- // content:
-       7,       // revision
-       0,       // classname
-       0,    0, // classinfo
-       0,    0, // methods
-       0,    0, // properties
-       0,    0, // enums/sets
-       0,    0, // constructors
-       0,       // flags
-       0,       // signalCount
+    // content:
+    7,       // revision
+    0,       // classname
+    0, 0, // classinfo
+    0, 0, // methods
+    0, 0, // properties
+    0, 0, // enums/sets
+    0, 0, // constructors
+    0,       // flags
+    0,       // signalCount
 
-       0        // eod
+    0        // eod
 };
 
-void DisasmTableView::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
-{
+void DisasmTableView::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a) {
     Q_UNUSED(_o);
     Q_UNUSED(_id);
     Q_UNUSED(_c);
@@ -61,26 +60,22 @@ void DisasmTableView::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
 }
 
 const QMetaObject DisasmTableView::staticMetaObject = {
-    { &QAbstractItemModel::staticMetaObject, qt_meta_stringdata_DisasmTableView.data,
-      qt_meta_data_DisasmTableView,  qt_static_metacall, Q_NULLPTR, Q_NULLPTR}
+    {&QAbstractItemModel::staticMetaObject, qt_meta_stringdata_DisasmTableView.data,
+     qt_meta_data_DisasmTableView, qt_static_metacall, Q_NULLPTR, Q_NULLPTR}
 };
 
-
-const QMetaObject *DisasmTableView::metaObject() const
-{
+const QMetaObject *DisasmTableView::metaObject() const {
     return QObject::d_ptr->metaObject ? QObject::d_ptr->dynamicMetaObject() : &staticMetaObject;
 }
 
-void *DisasmTableView::qt_metacast(const char *_clname)
-{
+void *DisasmTableView::qt_metacast(const char *_clname) {
     if (!_clname) return Q_NULLPTR;
     if (!strcmp(_clname, qt_meta_stringdata_DisasmTableView.stringdata0))
-        return static_cast<void*>(const_cast< DisasmTableView*>(this));
+        return static_cast<void *>(const_cast< DisasmTableView *>(this));
     return QAbstractItemModel::qt_metacast(_clname);
 }
 
-int DisasmTableView::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
-{
+int DisasmTableView::qt_metacall(QMetaObject::Call _c, int _id, void **_a) {
     _id = QAbstractItemModel::qt_metacall(_c, _id, _a);
     if (_id < 0)
         return _id;

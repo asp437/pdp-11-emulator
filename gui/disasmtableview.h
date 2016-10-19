@@ -25,8 +25,8 @@ public:
     int get_selected_row() { return _selected_row; }
     void select_row(int row) { _selected_row = row; }
 
-    void addObject(std::pair<uint, std::string>  value);
-    void setObjects(std::vector<std::pair<uint, std::string> >  rows) { this->_rows = rows; }
+    void addObject(std::pair<uint, std::string> value);
+    void setObjects(std::vector<std::pair<uint, std::string> > rows) { this->_rows = rows; }
 private:
     std::vector<std::pair<uint, std::string> > _rows;
     int _selected_row;

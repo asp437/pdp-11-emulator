@@ -54,6 +54,6 @@ int CPUStateTableView::rowCount(const QModelIndex &parent) const {
     return _rows.size();
 }
 
-void CPUStateTableView::addObject(std::pair<std::string, uint>  value) {
+void CPUStateTableView::addObject(std::pair<std::string, uint> value) {
     _rows.push_back(value);
 }

@@ -67,6 +67,6 @@ int DisasmTableView::rowCount(const QModelIndex &parent) const {
     return _rows.size();
 }
 
-void DisasmTableView::addObject(std::pair<uint, std::string>  value) {
+void DisasmTableView::addObject(std::pair<uint, std::string> value) {
     _rows.push_back(value);
 }

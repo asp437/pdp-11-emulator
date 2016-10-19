@@ -23,8 +23,8 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     int columnCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
 
-    void addObject(std::pair<std::string, uint>  value);
-    void setObjects(std::vector<std::pair<std::string, uint> >  rows) { this->_rows = rows; }
+    void addObject(std::pair<std::string, uint> value);
+    void setObjects(std::vector<std::pair<std::string, uint> > rows) { this->_rows = rows; }
 private:
     std::vector<std::pair<std::string, uint> > _rows;
 };
