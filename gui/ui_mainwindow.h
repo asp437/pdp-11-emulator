@@ -22,13 +22,14 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QWidget>
+#include "customqgraphicsview.h"
 
 QT_BEGIN_NAMESPACE
 
 class Ui_MainWindow {
 public:
     QWidget *centralWidget;
-    QGraphicsView *display_view;
+    CustomQGraphicsView *display_view;
     QGroupBox *cpu_state_box;
     QTableView *cpu_state_table;
     QGroupBox *disasm_box;
@@ -53,7 +54,7 @@ public:
         MainWindow->setLayoutDirection(Qt::RightToLeft);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
-        display_view = new QGraphicsView(centralWidget);
+        display_view = new CustomQGraphicsView(centralWidget);
         display_view->setObjectName(QStringLiteral("display_view"));
         display_view->setGeometry(QRect(0, 0, 600, 450));
         cpu_state_box = new QGroupBox(centralWidget);

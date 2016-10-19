@@ -35,6 +35,7 @@ public:
     bool is_halted();
     string get_rom_file_name() { return _rom_file_name; }
     vector<pair<string, uint16>> get_disasm(uint18 address, uint18 size);
+    void key_pressed(uint keycode, bool key_down);
 
     static const uint18 MEMORY_SIZE = 16 * 1024;
 private:

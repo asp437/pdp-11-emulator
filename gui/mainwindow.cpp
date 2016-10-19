@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <iostream>
+#include <QKeyEvent>
 #include <QtWidgets/QFileDialog>
 #include "../core/pdp_machine.h"
 
@@ -203,6 +204,7 @@ void MainWindow::update_cpu_registers_view() {
 
 void MainWindow::set_pdp_machine(PDPMachine *pdp_machine) {
     _pdp_machine = pdp_machine;
+    _ui->display_view->set_pdp_machine(_pdp_machine);
     _display_timer->start();
     update_cpu_registers_view();
     _ui->jump_to_mem_edit->setText("000000");

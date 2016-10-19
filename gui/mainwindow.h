@@ -35,7 +35,6 @@ public slots:
 
     void on_jump_to_disasm_edit_returnPressed();
     void on_jump_to_mem_edit_returnPressed();
-
 private:
     void update_cpu_registers_view();
 

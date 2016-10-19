@@ -6,7 +6,11 @@
 #define PDP_11_EMULATOR_PDPKEYBOARD_H
 
 #include "../../common.h"
+
+#include <map>
+
 #include "../UnibusDevice.h"
+
 
 class PDPKeyboard : public UnibusDevice {
 public:
@@ -20,17 +24,22 @@ public:
     uint8 read_byte(uint18 address, uint18 base_address) override;
     void write_byte(uint18 address, uint18 base_address, uint8 value) override;
 
-    static const uint18 PDP_KEYBOARD_SYMBOL_MEMORY_ADDRESS = 0176000;
-    static const uint18 PDP_KEYBOARD_ALT_FLAG_MEMORY_ADDRESS = 0176002;
-    static const uint18 PDP_KEYBOARD_SHIFT_FLAG_MEMORY_ADDRESS = 0176004;
-    static const uint18 PDP_KEYBOARD_CTRL_FLAG_MEMORY_ADDRESS = 0176006;
-    static const uint18 PDP_KEYBOARD_MEM_REGISTERS_ADDRESS = 0176000;
-    static const uint18 PDP_KEYBOARD_MEM_REGISTERS_SIZE = 0000010;
+    void key_pressed(int keycode, bool key_down);
+
+    static const uint18 PDP_KEYBOARD_SYMBOL_REGISTER = 0176000;
+    static const uint18 PDP_KEYBOARD_HANDLER_PC_LOCATION_REGISTER = 0176002;
+    static const uint18 PDP_KEYBOARD_HANDLER_PSW_LOCATION_REGISTER = 0176004;
+    static const uint18 PDP_KEYBOARD_REGISTERS_SIZE = 000006;
 private:
-    string _buffer;
-    bool _alt_pressed;
-    bool _ctrl_pressed;
+    uint16 _key_code;
+    uint16 _handler_pc;
+    uint16 _handler_psw;
+
+    map<uint, uint16> _key_conversion_map;
+
     bool _shift_pressed;
+    bool _ctrl_pressed;
+    bool _alt_pressed;
 };
 
 #endif //PDP_11_EMULATOR_PDPKEYBOARD_H

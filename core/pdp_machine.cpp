@@ -24,8 +24,8 @@ PDPMachine::PDPMachine(string rom_file) : _rom_file_name(rom_file) {
     _unibus->register_device(_cpu, CPU::BASE_MEM_MAP_SEGMENT_ADDRESS, CPU::BASE_MEM_MAP_SEGMENT_SIZE);
     _unibus->register_device(_rom, ROM::ROM_DEFAULT_OFFSET, ROM::ROM_DEFAULT_SIZE);
     _unibus->register_device(_keyboard,
-                             PDPKeyboard::PDP_KEYBOARD_MEM_REGISTERS_ADDRESS,
-                             PDPKeyboard::PDP_KEYBOARD_MEM_REGISTERS_SIZE);
+                             PDPKeyboard::PDP_KEYBOARD_SYMBOL_REGISTER,
+                             PDPKeyboard::PDP_KEYBOARD_REGISTERS_SIZE);
     _unibus->register_device(_tape_writer,
                              PDPTapeWriter::PDP_TAPE_WRITER_MEM_REGISTERS_ADDRESS,
                              PDPTapeWriter::PDP_TAPE_WRITER_MEM_REGISTERS_SIZE);
@@ -74,4 +74,8 @@ bool PDPMachine::is_halted() {
 }
 vector<pair<string, uint16>> PDPMachine::get_disasm(uint18 address, uint18 size) {
     return _disasm->disasm_code(address, size);
+}
+
+void PDPMachine::key_pressed(uint keycode, bool key_down) {
+    _keyboard->key_pressed(keycode, key_down);
 }
