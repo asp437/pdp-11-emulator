@@ -15,10 +15,10 @@ PDPKeyboard::PDPKeyboard() {
     _key_conversion_map[0x7e] = 3; // ~
     _key_conversion_map[0x21] = 15; // !
     _key_conversion_map[0x40] = 16; // @
-    _key_conversion_map[0x0df] = 17; // #
+    _key_conversion_map[0x23] = 17; // #
     _key_conversion_map[0x24] = 18; // $
     _key_conversion_map[0x25] = 19; // %
-    _key_conversion_map[0x0c0] = 20; // ^
+    _key_conversion_map[0x5e] = 20; // ^
     _key_conversion_map[0x26] = 21; // &
     _key_conversion_map[0x2a] = 22; // *
     _key_conversion_map[0x28] = 23; // (
@@ -44,6 +44,10 @@ PDPKeyboard::PDPKeyboard() {
     _key_conversion_map[0x3c] = 10; // <
     _key_conversion_map[0x3e] = 11; // >
     _key_conversion_map[0x3f] = 12; // ?
+    _key_conversion_map[0x20] = 2; // <space>
+    _key_conversion_map[0x1000003] = 1; // <backspace>
+    _key_conversion_map[0x1000004] = 0; // <enter>
+
 
     reset();
 }
@@ -102,13 +106,13 @@ void PDPKeyboard::key_pressed(int keycode, bool key_down) {
         _ctrl_pressed = key_down;
     } else if (keycode == 0x01000023 || keycode == 0x01001103) { // Qt::Key::Alt(Gr)
         _alt_pressed = key_down;
-    } else {
+    } else if (_key_conversion_map.find(keycode) != _key_conversion_map.end()) {
         _key_code = (uint16) _key_conversion_map[keycode];
-        cout << "Key event! Key: " << _key_code << ", is_down " << key_down << endl;
-        _key_code |= _alt_pressed ? (1 << 6) : 0;
-        _key_code |= _shift_pressed ? (1 << 7) : 0;
-        _key_code |= _ctrl_pressed ? (1 << 8) : 0;
+        _key_code |= _alt_pressed ? (1 << 5) : 0;
+        _key_code |= _shift_pressed ? (1 << 6) : 0;
+        _key_code |= _ctrl_pressed ? (1 << 7) : 0;
         _key_code |= key_down ? (1 << 9) : 0;
+        cout << "Key event! Key: " << keycode << ", is_down " << key_down << endl;
         _unibus->cpu_interrupt(PDP_KEYBOARD_HANDLER_PC_LOCATION_REGISTER);
     }
 
