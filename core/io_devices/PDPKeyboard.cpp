@@ -115,5 +115,4 @@ void PDPKeyboard::key_pressed(int keycode, bool key_down) {
         cout << "Key event! Key: " << keycode << ", is_down " << key_down << endl;
         _unibus->cpu_interrupt(PDP_KEYBOARD_HANDLER_PC_LOCATION_REGISTER);
     }
-
 }
