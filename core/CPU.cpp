@@ -237,7 +237,8 @@ void CPU::set_value(uint8 mode,
                 _unibus->write_word(pointer, value);
             }
             break;
-        default:throw new runtime_error("Wrong addressing mode");
+        default:
+            throw new runtime_error("Wrong addressing mode");
     }
 }
 
@@ -314,7 +315,8 @@ uint16 CPU::get_value(uint8 mode, uint8 address, bool byte_wide, bool update_poi
             } else {
                 return _unibus->read_word(pointer);
             }
-        default:throw new runtime_error("Wrong addressing mode");
+        default:
+            throw new runtime_error("Wrong addressing mode");
     }
 }
 

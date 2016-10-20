@@ -62,6 +62,11 @@ KEYBOARD_PUSH_BUTTON_EVENT_HANDLER_RENDER:
 	JSR R5, PRINT_SCREEN_CHAR_FUNCTION
 	ADD 6, R6
 
+	MOV (0001000), -(R6)
+	MOV (0001002), -(R6)
+	JSR R5, SCREEN_SYMBOL_BLINK_FUNCTION
+	ADD 4, R6
+
 	ADD 010, (0001000)
 	CMP (0001000), (FRAME_WIDTH)
 	BNE KEYBOARD_PUSH_BUTTON_EVENT_HANDLER_END
@@ -90,7 +95,6 @@ KEYBOARD_PUSH_BUTTON_EVENT_HANDLER_BACKSPACE:
 
 	RTI
 
-
 # /-------------------------------------------------------\
 # | CONVERT KEYBOARD CODE TO FONT CODE FUNCTION           |
 # \-------------------------------------------------------/
@@ -116,6 +120,55 @@ KEYBOARD_TO_FONT_CONVERT_LOWER:
 	MOV @2(R6), 2(R6)
 	BIC 0177400, 2(R6)
 	RST R5
+
+# /-------------------------------------------------------\
+# | SCREEN SYMBOL BLINK FUNCTION                          |
+# \-------------------------------------------------------/
+SCREEN_SYMBOL_BLINK_FUNCTION:
+	# Operands: x, y
+	# Old R5 value: SP+0
+	# y: SP+2
+	# x: SP+4
+
+	# Additional Variable
+	# tmp: SP+0
+	# vram_line_offset: SP+2
+
+	# vram_line_offset
+	MOV (FRAME_BUFFER_OFFSET), -(R6)
+	# tmp
+	MOV 0000000, -(R6)
+
+	# Old R5 value: SP+4
+	# y: SP+6
+	# x: SP+8
+
+	ASR 8(R6)
+	ASR 8(R6)
+	ADD 8(R6), 2(R6)
+
+	SCREEN_SYMBOL_BLINK_H_OFFSET_LOOP:
+		CMP 0(R6), 6(R6)
+		BEQ SCREEN_SYMBOL_BLINK_RENDER
+		ADD (FRAME_WIDTH_BYTES), 2(R6)
+		INC 0(R6)
+		BR SCREEN_SYMBOL_BLINK_H_OFFSET_LOOP
+
+	SCREEN_SYMBOL_BLINK_RENDER:
+		CLR 0(R6)
+
+	SCREEN_SYMBOL_BLINK_RENDER_LOOP:
+		CMP 010, 0(R6)
+		BEQ SCREN_SYMBOL_BLINK_END
+		COM @2(R6)
+		ADD (FRAME_WIDTH_BYTES), 2(R6)
+		INC 0(R6)
+		BR SCREEN_SYMBOL_BLINK_RENDER_LOOP
+
+	SCREN_SYMBOL_BLINK_END:
+		ADD 4, R6
+		RST R5
+
 
 # /-------------------------------------------------------\
 # | PRINT SCREEN CHARACTER FUNCTION                       |
