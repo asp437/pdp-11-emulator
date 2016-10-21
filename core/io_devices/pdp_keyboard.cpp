@@ -2,14 +2,14 @@
 // Created by Aleksandr Parfenov on 03.10.16.
 //
 
-#include "PDPKeyboard.h"
-#include "../Unibus.h"
+#include "pdp_keyboard.h"
+#include "../unibus.h"
 
 PDPKeyboard::PDPKeyboard() {
     for (uint i = 0; i <= 9; i++)
-        _key_conversion_map[0x30 + i] = 14 + i; // '0' - '9'
+        _key_conversion_map[0x30 + i] = (uint16) (14 + i); // '0' - '9'
     for (uint i = 0; i < 26; i++)
-        _key_conversion_map[0x41 + i] = 24 + i; // 'a' - 'z'
+        _key_conversion_map[0x41 + i] = (uint16) (24 + i); // 'a' - 'z'
 
     _key_conversion_map[0x60] = 3; // `
     _key_conversion_map[0x7e] = 3; // ~
@@ -47,7 +47,6 @@ PDPKeyboard::PDPKeyboard() {
     _key_conversion_map[0x20] = 2; // <space>
     _key_conversion_map[0x1000003] = 1; // <backspace>
     _key_conversion_map[0x1000004] = 0; // <enter>
-
 
     reset();
 }
@@ -112,7 +111,6 @@ void PDPKeyboard::key_pressed(int keycode, bool key_down) {
         _key_code |= _shift_pressed ? (1 << 6) : 0;
         _key_code |= _ctrl_pressed ? (1 << 7) : 0;
         _key_code |= key_down ? (1 << 9) : 0;
-        cout << "Key event! Key: " << keycode << ", is_down " << key_down << endl;
         _unibus->cpu_interrupt(PDP_KEYBOARD_HANDLER_PC_LOCATION_REGISTER);
     }
 }

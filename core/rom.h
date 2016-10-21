@@ -7,8 +7,8 @@
 
 #include "../common.h"
 
-#include "UnibusDevice.h"
-#include "Unibus.h"
+#include "unibus_device.h"
+#include "unibus.h"
 
 class ROM : public UnibusDevice {
 public:
@@ -28,8 +28,7 @@ public:
     static const uint18 ROM_DEFAULT_OFFSET = 0140000;
 private:
     uint8 *_rom_array;
-    uint16 _rom_size;
-    Unibus *_unibus;
+    uint18 _rom_size;
 };
 
 #endif //PDP_11_EMULATOR_ROM_H

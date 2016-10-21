@@ -3,14 +3,13 @@
 //
 
 #include "pdp_machine.h"
-#include "Unibus.h"
-#include "Memory.h"
-#include "CPU.h"
-#include "ROM.h"
-#include "DisAsm.h"
-#include "io_devices/PDPKeyboard.h"
-#include "io_devices/PDPTapeWriter.h"
-#include "io_devices/PDPDisplayAdapter.h"
+#include "unibus.h"
+#include "memory.h"
+#include "cpu.h"
+#include "rom.h"
+#include "disasm.h"
+#include "io_devices/pdp_keyboard.h"
+#include "io_devices/pdp_display_adapter.h"
 
 PDPMachine::PDPMachine(string rom_file) : _rom_file_name(rom_file) {
     _unibus = new Unibus();
@@ -18,7 +17,6 @@ PDPMachine::PDPMachine(string rom_file) : _rom_file_name(rom_file) {
     _rom = new ROM(rom_file);
     _cpu = new CPU();
     _keyboard = new PDPKeyboard();
-    _tape_writer = new PDPTapeWriter();
     _display_adapter = new PDPDisplayAdapter();
     _unibus->register_device(_memory, 0, _memory->get_memory_size());
     _unibus->register_device(_cpu, CPU::BASE_MEM_MAP_SEGMENT_ADDRESS, CPU::BASE_MEM_MAP_SEGMENT_SIZE);
@@ -26,31 +24,19 @@ PDPMachine::PDPMachine(string rom_file) : _rom_file_name(rom_file) {
     _unibus->register_device(_keyboard,
                              PDPKeyboard::PDP_KEYBOARD_SYMBOL_REGISTER,
                              PDPKeyboard::PDP_KEYBOARD_REGISTERS_SIZE);
-    _unibus->register_device(_tape_writer,
-                             PDPTapeWriter::PDP_TAPE_WRITER_MEM_REGISTERS_ADDRESS,
-                             PDPTapeWriter::PDP_TAPE_WRITER_MEM_REGISTERS_SIZE);
     _unibus->register_device(_display_adapter,
                              PDPDisplayAdapter::PDP_VIDEO_ADAPTER_VRAM_ADDRESS,
                              PDPDisplayAdapter::PDP_VIDEO_ADAPTER_VRAM_SIZE);
-    _unibus->register_device(_display_adapter,
-                             PDPDisplayAdapter::PDP_VIDEO_ADAPTER_IO_ADDRESS,
-                             PDPDisplayAdapter::PDP_VIDEO_ADAPTER_IO_SIZE);
     _disasm = new DisAsm(_unibus, _cpu->get_instruction_set());
-    // disasm.disasm_code(0140000, 128);
 }
 
 PDPMachine::~PDPMachine() {
     delete _unibus;
     delete _display_adapter;
-    delete _tape_writer;
     delete _keyboard;
     delete _cpu;
     delete _rom;
     delete _memory;
-}
-
-vector<vector<int>> &PDPMachine::get_video_buffer() {
-    return _display_adapter->get_video_buffer();
 }
 
 void PDPMachine::execute_command() {

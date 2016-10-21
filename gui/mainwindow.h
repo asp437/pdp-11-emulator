@@ -7,7 +7,7 @@
 #include <QGraphicsPixmapItem>
 #include "disasmtableview.h"
 #include "memoryexplorertableview.h"
-#include "../core/io_devices/PDPDisplayAdapter.h"
+#include "../core/io_devices/pdp_display_adapter.h"
 
 class PDPMachine;
 
@@ -22,7 +22,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void set_pdp_machine(PDPMachine *pdp_machine);
-    void render_display(std::vector<std::vector<int> > &buffer);
     void render_display(PDPDisplayAdapter *display_adapter);
 public slots:
     void on_load_rom_button_clicked();

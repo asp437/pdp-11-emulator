@@ -50,13 +50,6 @@ MainWindow::MainWindow(QWidget *parent) :
     MemoryExplorerTableView *memory_model = new MemoryExplorerTableView();
     memory_model->setBaseAddress(0);
     std::vector<uint16_t> data;
-    data.push_back(0000000);
-    data.push_back(0000002);
-    data.push_back(0000004);
-    data.push_back(0000006);
-    data.push_back(0000010);
-    data.push_back(0000012);
-    data.push_back(0000014);
 
     memory_model->setObjects(data);
     _ui->memory_explorer_table->setModel(memory_model);
@@ -69,18 +62,6 @@ MainWindow::~MainWindow() {
     delete _clock_timer;
     delete _display_timer;
     delete _ui;
-}
-
-void MainWindow::render_display(std::vector<std::vector<int> > &buffer) {
-    QImage image((int) buffer.size(), (int) buffer[0].size(), QImage::Format_RGB888);
-    int width = buffer.size(), height = buffer[0].size();
-    for (int x = 0; x < width; x++) {
-        for (int y = 0; y < height; y++) {
-            image.setPixel(x, y, buffer[x][y]);
-        }
-    }
-    _screen_graphics_item->setPixmap(QPixmap::fromImage(image));
-    _ui->display_view->update();
 }
 
 void MainWindow::render_display(PDPDisplayAdapter *display_adapter) {

@@ -3,7 +3,7 @@
 //
 
 #include <cstring>
-#include "Memory.h"
+#include "memory.h"
 
 Memory::Memory(uint16 memory_size) : _memory_size(memory_size) {
     if ((memory_size & 0x1) == 0x1)
@@ -23,18 +23,14 @@ void Memory::reset() {
 }
 
 uint16 Memory::read_word(uint18 address, uint18 base_address) {
-    if ((address - base_address) >= _memory_size)
-        throw new runtime_error("Illegal memory address access");
-    if ((address & 0x1) == 0x1)
+    if ((address - base_address) >= _memory_size || (address & 0x1) == 0x1)
         throw new runtime_error("Illegal memory address access");
     uint16 val = _memory_array[address - base_address] | (_memory_array[address - base_address + 1] << 8);
     return val;
 }
 
 void Memory::write_word(uint18 address, uint18 base_address, uint16 value) {
-    if ((address - base_address) >= _memory_size)
-        throw new runtime_error("Illegal memory address access");
-    if ((address & 0x1) == 0x1)
+    if ((address - base_address) >= _memory_size || (address & 0x1) == 0x1)
         throw new runtime_error("Illegal memory address access");
     _memory_array[address - base_address] = (uint8) (value & 0xFF);
     _memory_array[address - base_address + 1] = (uint8) ((value & 0xFF00) >> 8);

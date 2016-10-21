@@ -2,7 +2,7 @@
 // Created by Aleksandr Parfenov on 01.10.16.
 //
 
-#include "CPU.h"
+#include "cpu.h"
 
 #include <iomanip>
 #include <cstring>

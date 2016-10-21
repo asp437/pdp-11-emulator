@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include "UnibusDevice.h"
+#include "unibus_device.h"
 
 class UnibusDeviceConfiguration;
 

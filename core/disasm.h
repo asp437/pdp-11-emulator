@@ -8,8 +8,8 @@
 #include "../common.h"
 #include <vector>
 
-#include "Unibus.h"
-#include "CPU.h"
+#include "unibus.h"
+#include "cpu.h"
 
 class DisAsm {
 public:

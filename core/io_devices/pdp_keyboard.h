@@ -9,7 +9,7 @@
 
 #include <map>
 
-#include "../UnibusDevice.h"
+#include "../unibus_device.h"
 
 
 class PDPKeyboard : public UnibusDevice {
@@ -35,7 +35,7 @@ private:
     uint16 _handler_pc;
     uint16 _handler_psw;
 
-    map<uint, uint16> _key_conversion_map;
+    map<int, uint16> _key_conversion_map;
 
     bool _shift_pressed;
     bool _ctrl_pressed;

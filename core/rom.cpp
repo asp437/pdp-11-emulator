@@ -2,7 +2,7 @@
 // Created by Aleksandr Parfenov on 01.10.16.
 //
 
-#include "ROM.h"
+#include "rom.h"
 #include <cstring>
 #include <fstream>
 
@@ -13,7 +13,7 @@ ROM::ROM(string rom_file) {
         throw new runtime_error("Can't open ROM file");
 
     ifs.seekg(0, ios_base::end);
-    uint rom_file_size = ifs.tellg();
+    uint18 rom_file_size = (uint18) ifs.tellg();
     ifs.seekg(0, ios_base::beg);
     _rom_size = rom_file_size < ROM_DEFAULT_SIZE ? rom_file_size : ROM_DEFAULT_SIZE;
     _rom_array = (uint8 *) calloc(_rom_size, sizeof(uint8));
@@ -37,9 +37,7 @@ void ROM::reset() {
 }
 
 uint16 ROM::read_word(uint18 address, uint18 base_address) {
-    if ((address - base_address) >= _rom_size)
-        throw new runtime_error("Illegal ROM address access");
-    if ((address & 0x1) == 0x1)
+    if ((address - base_address) >= _rom_size || (address & 0x1) == 0x1)
         throw new runtime_error("Illegal ROM address access");
     uint16 val = _rom_array[address - base_address] | (_rom_array[address - base_address + 1] << 8);
     return val;

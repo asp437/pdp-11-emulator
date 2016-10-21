@@ -7,8 +7,8 @@
 
 #include "../common.h"
 
-#include "UnibusDevice.h"
-#include "Unibus.h"
+#include "unibus_device.h"
+#include "unibus.h"
 
 class Memory : public UnibusDevice {
 public:

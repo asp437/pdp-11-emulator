@@ -13,7 +13,6 @@ class Memory;
 class ROM;
 class CPU;
 class PDPKeyboard;
-class PDPTapeWriter;
 class PDPDisplayAdapter;
 class DisAsm;
 
@@ -27,7 +26,6 @@ public:
     PDPMachine(string rom_file);
     ~PDPMachine();
 
-    vector<vector<int>> &get_video_buffer();
     void execute_command();
     uint16 get_memory_word(uint18 address);
     CPUState get_cpu_state();
@@ -45,7 +43,6 @@ private:
     ROM *_rom;
     CPU *_cpu;
     PDPKeyboard *_keyboard;
-    PDPTapeWriter *_tape_writer;
     PDPDisplayAdapter *_display_adapter;
     DisAsm *_disasm;
 };

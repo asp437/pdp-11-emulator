@@ -2,7 +2,7 @@
 // Created by Aleksandr Parfenov on 19.10.16.
 //
 
-#include "DisAsm.h"
+#include "disasm.h"
 #include <sstream>
 #include <iomanip>
 
