@@ -73,3 +73,10 @@ out
 gen
 
 build/
+
+# Linux PDP-11 asembler development environemnt ignoring
+/pdp_roms/build.sh
+/pdp_roms/build.bat
+/pdp_roms/pdp11-asm
+/pdp_roms/pdp11-asm.exe
+/pdp_roms/font_injector.py
