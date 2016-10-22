@@ -5,11 +5,11 @@
 #ifndef PDP_11_EMULATOR_DISASM_H
 #define PDP_11_EMULATOR_DISASM_H
 
-#include "../common.h"
+#include "../../common.h"
 #include <vector>
 
-#include "unibus.h"
-#include "cpu.h"
+#include "../unibus/unibus.h"
+#include "../cpu.h"
 
 class DisAsm {
 public:

@@ -5,15 +5,15 @@
 #ifndef PDP_11_EMULATOR_MEMORY_H
 #define PDP_11_EMULATOR_MEMORY_H
 
-#include "../common.h"
+#include "../../common.h"
 
-#include "unibus_device.h"
-#include "unibus.h"
+#include "../unibus/unibus_device.h"
+#include "../unibus/unibus.h"
 
-class Memory : public UnibusDevice {
+class RAM : public UnibusDevice {
 public:
-    Memory(uint16 memory_size);
-    virtual ~Memory();
+    RAM(uint16 memory_size);
+    virtual ~RAM();
 
     string get_name() override { return "Main Random Access Memory"; }
     void reset() override;

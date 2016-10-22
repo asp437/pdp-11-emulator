@@ -5,10 +5,10 @@
 #ifndef PDP_11_EMULATOR_ROM_H
 #define PDP_11_EMULATOR_ROM_H
 
-#include "../common.h"
+#include "../../common.h"
 
-#include "unibus_device.h"
-#include "unibus.h"
+#include "../unibus/unibus_device.h"
+#include "../unibus/unibus.h"
 
 class ROM : public UnibusDevice {
 public:

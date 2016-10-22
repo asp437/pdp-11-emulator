@@ -9,7 +9,7 @@
 #include <vector>
 
 class Unibus;
-class Memory;
+class RAM;
 class ROM;
 class CPU;
 class PDPKeyboard;
@@ -39,7 +39,7 @@ public:
 private:
     string _rom_file_name;
     Unibus *_unibus;
-    Memory *_memory;
+    RAM *_memory;
     ROM *_rom;
     CPU *_cpu;
     PDPKeyboard *_keyboard;

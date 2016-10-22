@@ -6,7 +6,7 @@
 #define PDP_11_EMULATOR_CPU_H
 
 #include "../common.h"
-#include "unibus.h"
+#include "unibus/unibus.h"
 
 class CPU;
 

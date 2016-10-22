@@ -6,7 +6,7 @@
 #define PDP_11_EMULATOR_PDPDISPLAYADAPTER_H
 
 #include "../../common.h"
-#include "../unibus_device.h"
+#include "../unibus/unibus_device.h"
 
 #include <vector>
 

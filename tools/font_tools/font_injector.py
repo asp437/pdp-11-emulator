@@ -7,7 +7,7 @@ if (len(sys.argv) != 2):
 
 
 firmware_file = open(sys.argv[1], 'br+')
-font_file = open('font.bin', 'rb')
+font_file = open('util/font.bin', 'rb')
 
 font_size = os.stat('font.bin').st_size
 font_offset = 8 * 1024 - font_size

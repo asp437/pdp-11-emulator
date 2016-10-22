@@ -30,11 +30,11 @@ QVariant DisasmTableView::data(const QModelIndex &index, int role) const {
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    if (index.column() == 0) {
+  if (index.column() == 0 && _rows.size() > index.row()) {
         std::stringstream stream;
-        stream << std::oct << std::setfill('0') << std::setw(7) << _rows.at(index.row()).first;
+    stream << std::oct << std::setfill('0') << std::setw(6) << _rows.at(index.row()).first;
         return QString(stream.str().c_str());
-    } else if (index.column() == 1)
+  } else if (index.column() == 1 && _rows.size() > index.row())
         return QString(_rows.at(index.row()).second.first.c_str());
     else
         return QVariant();
@@ -43,7 +43,7 @@ QVariant DisasmTableView::data(const QModelIndex &index, int role) const {
 Qt::ItemFlags DisasmTableView::flags(const QModelIndex &index) const {
     if (_rows.size() <= 0)
         return 0;
-    return QAbstractItemModel::flags(index).setFlag(Qt::ItemIsSelectable, false);
+  return QAbstractItemModel::flags(index);
 }
 
 QVariant DisasmTableView::headerData(int section, Qt::Orientation orientation, int role) const {
@@ -63,7 +63,7 @@ QModelIndex DisasmTableView::parent(const QModelIndex &index) const {
 }
 
 int DisasmTableView::rowCount(const QModelIndex &parent) const {
-    return _rows.size();
+  return (int) _rows.size();
 }
 
 void DisasmTableView::setObjects(uint base_address, std::vector<std::pair<std::string, uint16>> &rows) {

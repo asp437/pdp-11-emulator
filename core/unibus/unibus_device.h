@@ -5,7 +5,7 @@
 #ifndef PDP_11_EMULATOR_UNIBUSDEVICE_H
 #define PDP_11_EMULATOR_UNIBUSDEVICE_H
 
-#include "../common.h"
+#include "../../common.h"
 
 class Unibus;
 

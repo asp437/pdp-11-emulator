@@ -3,17 +3,17 @@
 //
 
 #include "pdp_machine.h"
-#include "unibus.h"
-#include "memory.h"
+#include "unibus/unibus.h"
+#include "memory/ram.h"
 #include "cpu.h"
-#include "rom.h"
-#include "disasm.h"
+#include "memory/rom.h"
+#include "utils/disasm.h"
 #include "io_devices/pdp_keyboard.h"
 #include "io_devices/pdp_display_adapter.h"
 
 PDPMachine::PDPMachine(string rom_file) : _rom_file_name(rom_file) {
     _unibus = new Unibus();
-    _memory = new Memory(MEMORY_SIZE);
+    _memory = new RAM(MEMORY_SIZE);
     _rom = new ROM(rom_file);
     _cpu = new CPU();
     _keyboard = new PDPKeyboard();

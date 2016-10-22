@@ -5,7 +5,7 @@
 #ifndef PDP_11_EMULATOR_UNIBUS_H
 #define PDP_11_EMULATOR_UNIBUS_H
 
-#include "../common.h"
+#include "../../common.h"
 
 #include <vector>
 

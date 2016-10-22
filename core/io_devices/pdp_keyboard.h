@@ -9,7 +9,7 @@
 
 #include <map>
 
-#include "../unibus_device.h"
+#include "../unibus/unibus_device.h"
 
 
 class PDPKeyboard : public UnibusDevice {
