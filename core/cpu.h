@@ -6,6 +6,9 @@
 #define PDP_11_EMULATOR_CPU_H
 
 #include "../common.h"
+
+#include <chrono>
+
 #include "unibus/unibus.h"
 
 class CPU;
@@ -194,6 +197,10 @@ private:
     bool _halted;
 
     vector<CPUInstruction> _instruction_set;
+
+    int _ticks;
+    chrono::high_resolution_clock::duration _dt_sum;
+    chrono::high_resolution_clock::time_point _prev_tick_time;
 };
 
 #endif //PDP_11_EMULATOR_CPU_H

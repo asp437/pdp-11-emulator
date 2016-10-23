@@ -97,6 +97,9 @@ CPU::CPU() {
     _psw.ps = 0;
     _r[6].r = 16 * 1024;
     _pc.r = 0140000;
+
+    _ticks = 0;
+    _prev_tick_time = chrono::high_resolution_clock::now();
 }
 
 CPU::~CPU() {
@@ -376,8 +379,17 @@ void CPU::execute() {
             break;
         }
     }
-
     this->_pc.r += _pc_step;
+
+    _ticks++;
+    chrono::high_resolution_clock::time_point t = chrono::high_resolution_clock::now();
+    _dt_sum += t - _prev_tick_time;
+    if (chrono::duration_cast<chrono::duration<double>>(_dt_sum).count() > 1.0) {
+        cout << _ticks << " ticks" << endl;
+        _dt_sum = chrono::high_resolution_clock::duration();
+        _ticks = 0;
+    }
+    _prev_tick_time = t;
 }
 
 void CPU::interrupt(uint18 address) {
