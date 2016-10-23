@@ -43,6 +43,7 @@ private:
     QTimer *_clock_timer;
     QTimer *_display_timer;
     PDPMachine *_pdp_machine;
+    QImage *_image;
 };
 
 #endif // MAINWINDOW_H

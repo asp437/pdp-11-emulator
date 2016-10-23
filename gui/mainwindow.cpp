@@ -37,10 +37,10 @@ MainWindow::MainWindow(QWidget *parent) :
     cpu_state_view->addObject(std::make_pair("R7/PC", 0));
     cpu_state_view->addObject(std::make_pair("PSW", 0));
     cpu_state_view->addObject(std::make_pair("Int Pri", 0));
-    cpu_state_view->addObject(std::make_pair("N", 0));
+    cpu_state_view->addObject(std::make_pair("C", 0));
     cpu_state_view->addObject(std::make_pair("V", 0));
     cpu_state_view->addObject(std::make_pair("Z", 0));
-    cpu_state_view->addObject(std::make_pair("C", 0));
+    cpu_state_view->addObject(std::make_pair("N", 0));
 
     _ui->cpu_state_table->setModel(cpu_state_view);
     _ui->cpu_state_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -55,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
     _ui->memory_explorer_table->setModel(memory_model);
     _ui->memory_explorer_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     _ui->memory_explorer_table->horizontalHeader()->setSectionsClickable(false);
+    _image = nullptr;
 }
 
 MainWindow::~MainWindow() {
@@ -66,16 +67,27 @@ MainWindow::~MainWindow() {
 
 void MainWindow::render_display(PDPDisplayAdapter *display_adapter) {
     int width = display_adapter->get_width(), height = display_adapter->get_height();
-    QImage image(width, height, QImage::Format_RGB888);
-
-    for (int x = 0; x < width; x++) {
-        for (int y = 0; y < height; y++) {
-            image.setPixel(x, y, 0xFF000000 | display_adapter->get_pixel(x, y));
+    if (_image == nullptr) {
+        _image = new QImage(width, height, QImage::Format_RGB30);
+        _screen_graphics_item->setScale(2.0f);
+    }
+    uint16 pixel_vram_offset = 0;
+    uint8 *vram = display_adapter->get_vram();
+    const uint8 mask = 0x3;
+    uint color;
+    uint palette[4] = {0xFF000000, 0xFF555555, 0xFFAAAAAA, 0xFFFFFFFF};
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x += 4) {
+            color = vram[pixel_vram_offset];
+            for (int i = 0; i < 4; i++) {
+                _image->setPixel(x + i, y, palette[color & mask]);
+                color >>= 2;
+            }
+            pixel_vram_offset++;
         }
     }
-    _screen_graphics_item->setPixmap(QPixmap::fromImage(image));
-    _screen_graphics_item->setScale(2.0f);
-    _ui->display_view->update();
+
+    _screen_graphics_item->setPixmap(QPixmap::fromImage(*_image));
 }
 
 void MainWindow::on_load_rom_button_clicked() {
@@ -139,7 +151,7 @@ void MainWindow::on_jump_to_disasm_edit_returnPressed() {
     std::vector<pair<string, uint16>> disasm_result = _pdp_machine->get_disasm(offset, 256);
     _diasm_table_view->setObjects(offset, disasm_result);
     _ui->disasm_table->setModel(_diasm_table_view);
-    _ui->disasm_table->setColumnWidth(1, 300);
+    _ui->disasm_table->setColumnWidth(1, 230);
     _ui->disasm_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     _ui->disasm_table->horizontalHeader()->setSectionsClickable(false);
     _ui->disasm_table->setFocus();

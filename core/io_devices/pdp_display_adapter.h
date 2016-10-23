@@ -24,6 +24,8 @@ public:
     uint get_pixel(uint16 x, uint16 y);
     uint16 get_width() { return 400; }
     uint16 get_height() { return 300; }
+    uint8 *get_vram() { return _vram; }
+    uint16 get_vram_size() { return _vram_size; }
 
     static const uint16 PDP_VIDEO_ADAPTER_VRAM_ADDRESS = 0040000;
     static const uint16 PDP_VIDEO_ADAPTER_VRAM_SIZE = 0100000;
