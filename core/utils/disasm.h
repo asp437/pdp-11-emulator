@@ -19,7 +19,7 @@ public:
 private:
     pair<string, uint16> get_src_operand(uint16 opcode, uint18 opcode_address);
     pair<string, uint16> get_dst_operand(uint16 opcode, uint18 opcode_address);
-    pair<string, uint16> get_operand_value(uint8 mode, uint8 reg, uint18 opcode_address, uint18 index_offset);
+    pair<string, uint16> get_operand_value(InstructionOperand operand, uint18 opcode_address);
     pair<string, uint16> disasm_instruction(uint18 address);
 
     Unibus *_unibus;

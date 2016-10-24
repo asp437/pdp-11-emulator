@@ -18,70 +18,68 @@ vector <pair<string, uint16>> DisAsm::disasm_code(uint18 base_address, uint18 si
 }
 
 pair <string, uint16> DisAsm::get_dst_operand(uint16 opcode, uint18 opcode_address) {
-    uint8 mode = ((uint8)(opcode & 0000070)) >> 3;
-    uint8 reg = (uint8)(opcode & 0000007);
-    uint8 src_mode = (uint8)((opcode & 0007000) >> 9);
-    bool src_follow_instr = ((opcode & 0070000) != 0 && src_mode >= 6) || (opcode & 0000700) == 0000700;
-    uint16 index_offset = (uint16)(src_follow_instr ? 4 : 2); // Double Operand Instructions check
-    return get_operand_value(mode, reg, opcode_address, index_offset);
+    InstructionOperand operand = CPU::decode_dst_operand(opcode);
+    operand.index_offset += 2;
+    return get_operand_value(operand, opcode_address);
 }
 
 pair <string, uint16> DisAsm::get_src_operand(uint16 opcode, uint18 opcode_address) {
-    uint8 mode = (uint8)((opcode & 0007000) >> 9);
-    uint8 reg = (uint8)((opcode & 0000700) >> 6);
-    return get_operand_value(mode, reg, opcode_address, 2);
+    InstructionOperand operand = CPU::decode_src_operand(opcode);
+    operand.index_offset += 2;
+    return get_operand_value(operand, opcode_address);
 }
 
-pair <string, uint16> DisAsm::get_operand_value(uint8 mode, uint8 reg, uint18 opcode_address, uint18 index_offset) {
+pair<string, uint16> DisAsm::get_operand_value(InstructionOperand operand, uint18 opcode_address) {
     stringstream ss;
     ss << oct;
     uint16 val;
     uint16 operand_after_instruction = 0;
-    switch (mode) {
+    switch (operand.mode) {
         case 0:
-            ss << "R" << to_string(reg);
+            ss << "R" << to_string(operand.register_addr);
             break;
         case 1:
-            ss << "@(R" << to_string(reg) << ")";
+            ss << "@(R" << to_string(operand.register_addr) << ")";
             break;
         case 2:
-            if (reg == 7) {
+            if (operand.register_addr == 7) {
                 operand_after_instruction += 2;
-                ss << oct << setfill('0') << setw(7) << _unibus->read_word(opcode_address + index_offset);
+                ss << oct << setfill('0') << setw(7) << _unibus->read_word(opcode_address + operand.index_offset);
             } else {
-                ss << "(R" << to_string(reg) << ")+";
+                ss << "(R" << to_string(operand.register_addr) << ")+";
             }
             break;
         case 3:
-            if (reg == 7) {
+            if (operand.register_addr == 7) {
                 operand_after_instruction += 2;
-                ss << "@" << oct << setfill('0') << setw(7) << _unibus->read_word(opcode_address + index_offset);
+                ss << "@" << oct << setfill('0') << setw(7)
+                   << _unibus->read_word(opcode_address + operand.index_offset);
             } else {
-                ss << "@(R" << to_string(reg) << ")+";
+                ss << "@(R" << to_string(operand.register_addr) << ")+";
             }
             break;
         case 4:
-            ss << "-(R" << to_string(reg) << ")";
+            ss << "-(R" << to_string(operand.register_addr) << ")";
             break;
         case 5:
-            ss << "@-(R" << to_string(reg) << ")";
+            ss << "@-(R" << to_string(operand.register_addr) << ")";
             break;
         case 6:
-            val = _unibus->read_word(opcode_address + index_offset);
+            val = _unibus->read_word(opcode_address + operand.index_offset);
             operand_after_instruction += 2;
-            if (reg == 7) {
+            if (operand.register_addr == 7) {
                 ss << oct << setfill('0') << setw(7) << _unibus->read_word(val + opcode_address);
             } else {
-                ss << oct << setfill('0') << setw(7) << val << "(R" << to_string(reg) << ")";
+                ss << oct << setfill('0') << setw(7) << val << "(R" << to_string(operand.register_addr) << ")";
             }
             break;
         case 7:
-            val = _unibus->read_word(opcode_address + index_offset);
+            val = _unibus->read_word(opcode_address + operand.index_offset);
             operand_after_instruction += 2;
-            if (reg == 7) {
+            if (operand.register_addr == 7) {
                 ss << "@(" << oct << setfill('0') << setw(7) << _unibus->read_word(val + opcode_address) << ")";
             } else {
-                ss << "@" << oct << setfill('0') << setw(7) << val << "(R" << to_string(reg) << ")";
+                ss << "@" << oct << setfill('0') << setw(7) << val << "(R" << to_string(operand.register_addr) << ")";
             }
             break;
         default:

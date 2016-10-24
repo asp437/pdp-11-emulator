@@ -41,6 +41,12 @@ struct CPUInstruction {
     void (CPU::*opcode_func)(uint16);
 };
 
+struct InstructionOperand {
+    uint8 mode;
+    uint8 register_addr;
+    uint16 index_offset;
+};
+
 const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0177700;
 const uint16 DOUBLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0170000;
 const uint16 REGISTER_ONLY_INSTRUCTION_MASK = (const uint16) 0177770;
@@ -57,17 +63,23 @@ public:
 
     string get_name() override { return "Central Processing Unit"; }
     void reset() override;
+
     uint16 read_word(uint18 address, uint18 base_address) override;
     void write_word(uint18 address, uint18 base_address, uint16 value) override;
     uint8 read_byte(uint18 address, uint18 base_address) override;
     void write_byte(uint18 address, uint18 base_address, uint8 value) override;
+
     void execute();
     void interrupt(uint18 address) override;
     bool is_busy() override { return false; }
     bool is_halted() { return _halted; }
+
     Register get_register(int i);
     PSW get_psw();
     vector<CPUInstruction> get_instruction_set() { return _instruction_set; }
+
+    static InstructionOperand decode_src_operand(uint16 opcode);
+    static InstructionOperand decode_dst_operand(uint16 opcode);
 
     static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
     static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 077;
@@ -77,16 +89,11 @@ private:
                               uint16 opcode_signature,
                               void(CPU::*opcode_f)(uint16));
 
-    void set_value(uint8 mode,
-                   uint8 address,
-                   uint16 value,
-                   bool byte_wide,
-                   bool update_pointers,
-                   uint16 index_word_offset);
-    uint16 get_value(uint8 mode, uint8 address, bool byte_wide, bool update_pointers, uint16 index_word_offset);
+    void set_value(InstructionOperand operand, uint16 value, bool byte_wide, bool update_pointers);
+    uint16 get_value(InstructionOperand operand, bool byte_wide, bool update_pointers);
+
     void set_destination_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);
     uint16 get_destination_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);
-    void set_source_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);
     uint16 get_source_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);
 
     void stack_push(uint16 value);
