@@ -97,6 +97,8 @@ CPU::CPU() {
     _pc.r = 0140000;
 
     _ticks = 0;
+    _emulated_ticks = 0;
+    _ticks_per_second = 5000000;
     _prev_tick_time = chrono::high_resolution_clock::now();
 
     cout << "CPU initialization complete. Totally registered " << _instruction_set.size() << " instructions." << endl;
@@ -107,9 +109,6 @@ CPU::~CPU() {
     _unibus = nullptr;
     memset(_r, 0, sizeof(_r));
     _pc_step = 0;
-}
-
-void CPU::reset() {
 }
 
 uint16 CPU::read_word(uint18 address, uint18 base_address) {
@@ -140,12 +139,13 @@ void CPU::write_byte(uint18 address, uint18 base_address, uint8 value) {
     throw new runtime_error("CPU doesn't support byte writing");
 }
 
-void CPU::register_instruction(string mnemonic, uint16 mask, uint16 signature, void (CPU::*opcode_f)(uint16)) {
+void CPU::register_instruction(string mnemonic, uint16 mask, uint16 signature, void (CPU::*opcode_f)(uint16), uint8 time) {
     CPUInstruction instruction;
     instruction.mnemonic = mnemonic;
     instruction.opcode_mask = mask;
     instruction.opcode_signature = signature;
     instruction.opcode_func = opcode_f;
+    instruction.time = time;
     _instruction_set.push_back(instruction);
 
     ios_base::fmtflags cout_flags = cout.flags();
@@ -158,12 +158,13 @@ void CPU::register_instruction(string mnemonic, uint16 mask, uint16 signature, v
 void CPU::set_value(InstructionOperand operand, uint16 value, bool byte_wide, bool update_pointers) {
     if (operand.mode == 0) {
         this->_r[operand.register_addr].r = value;
+        _emulated_ticks += 1;
     } else {
         uint18 address = get_operand_address(operand, byte_wide, update_pointers);
         if (byte_wide) {
-            _unibus->write_byte(address, (uint8) value);
+            write_memory_byte(address, (uint8) value);
         } else {
-            _unibus->write_word(address, value);
+            write_memory_word(address, value);
         }
     }
 }
@@ -174,9 +175,9 @@ uint16 CPU::get_value(InstructionOperand operand, bool byte_wide, bool update_po
     } else {
         uint18 address = get_operand_address(operand, byte_wide, update_pointers);
         if (byte_wide) {
-            return _unibus->read_byte(address);
+            return read_memory_byte(address);
         } else {
-            return _unibus->read_word(address);
+            return read_memory_word(address);
         }
     }
 }
@@ -202,7 +203,7 @@ uint18 CPU::get_operand_address(InstructionOperand operand, bool byte_wide, bool
             }
             break;
         case 3: // Autoincrement Deferred
-            result = _unibus->read_word(
+            result = read_memory_word(
                 operand.register_addr == 07 ? this->_r[operand.register_addr].r + operand.index_offset
                                             : this->_r[operand.register_addr].r);
             if (operand.register_addr == 07)
@@ -224,17 +225,17 @@ uint18 CPU::get_operand_address(InstructionOperand operand, bool byte_wide, bool
             } else {
                 this->_r[operand.register_addr].r -= update_pointers ? 2 : 0;
             }
-            result = _unibus->read_word(this->_r[operand.register_addr].r);
+            result = read_memory_word(this->_r[operand.register_addr].r);
             break;
         case 6: // Index
-            index = _unibus->read_word(_pc.r + operand.index_offset);
+            index = read_memory_word(_pc.r + operand.index_offset);
             result = this->_r[operand.register_addr].r + index;
             if (update_pointers)
                 _pc_step += 2;
             break;
         case 7: // Index Deferred
-            index = _unibus->read_word(_pc.r + operand.index_offset);
-            result = _unibus->read_word(this->_r[operand.register_addr].r + index);
+            index = read_memory_word(_pc.r + operand.index_offset);
+            result = read_memory_word(this->_r[operand.register_addr].r + index);
             if (update_pointers)
                 _pc_step += 2;
             break;
@@ -277,52 +278,85 @@ uint16 CPU::get_source_value(uint16 opcode, bool byte_wide, bool update_pointers
     return get_value(decode_src_operand(opcode), byte_wide, update_pointers);
 }
 
+uint16 CPU::read_memory_word(uint18 address) {
+    _emulated_ticks += 2;
+    return _unibus->read_word(address);
+}
+
+void CPU::write_memory_word(uint18 address, uint16 value) {
+    _emulated_ticks += 2;
+    _unibus->write_word(address, value);
+}
+
+uint8 CPU::read_memory_byte(uint18 address) {
+    _emulated_ticks += 2;
+    return _unibus->read_byte(address);
+}
+
+void CPU::write_memory_byte(uint18 address, uint8 value) {
+    _emulated_ticks += 2;
+    _unibus->write_byte(address, value);
+}
+
 void CPU::stack_push(uint16 value) {
     _sp.r -= 2;
-    _unibus->write_word(_sp.r, value);
+    write_memory_word(_sp.r, value);
 }
 
 uint16 CPU::stack_pop() {
-    uint16 val = _unibus->read_word(_sp.r);
+    uint16 val = read_memory_word(_sp.r);
     _sp.r += 2;
     return val;
 }
 
 void CPU::execute() {
-    if (_waiting || _halted)
+    if (_waiting || _halted) {
+        reset_timer();
         return;
-    uint16 opcode = _unibus->read_word((uint18) this->_pc.r);
-    _pc.r += 2; // Immediately move forward from opcode
-    _pc_step = 0;
-    for (auto instruction_it = _instruction_set.begin(); instruction_it != _instruction_set.end();
-         ++instruction_it) {
-        // TODO: Optimize execution, combine opcodes wrt. masks
-        if ((opcode & instruction_it->opcode_mask) == instruction_it->opcode_signature) {
-            (this->*(instruction_it->opcode_func))(opcode);
-            // cout << disasm(opcode) << endl;
-            break;
-        }
     }
-    this->_pc.r += _pc_step;
 
-    _ticks++;
     chrono::high_resolution_clock::time_point t = chrono::high_resolution_clock::now();
+    double dt = chrono::duration_cast<chrono::duration<double>>(t - _prev_tick_time).count();
+    _emulated_ticks -= _ticks_per_second * dt;
+    while (_emulated_ticks <= 0) {
+        if (_waiting || _halted)
+            break;
+        int old_emulated_ticks = _emulated_ticks;
+        uint16 opcode = read_memory_word((uint18) this->_pc.r);
+        _pc.r += 2; // Immediately move forward from opcode
+        _pc_step = 0;
+        for (auto instruction_it = _instruction_set.begin(); instruction_it != _instruction_set.end();
+             ++instruction_it) {
+            // TODO: Optimize execution, combine opcodes wrt. masks
+            if ((opcode & instruction_it->opcode_mask) == instruction_it->opcode_signature) {
+                (this->*(instruction_it->opcode_func))(opcode);
+                _emulated_ticks += instruction_it->time;
+                break;
+            }
+        }
+        this->_pc.r += _pc_step;
+        _ticks += _emulated_ticks - old_emulated_ticks;
+    }
+
     _dt_sum += t - _prev_tick_time;
-    if (chrono::duration_cast<chrono::duration<double>>(_dt_sum).count() > 1.0) {
-        cout << _ticks << " ticks" << endl;
+    if (chrono::duration_cast<chrono::duration<double>>(_dt_sum).count() >= 1.0) {
+        cout << fixed << _ticks / chrono::duration_cast<chrono::duration<double>>(_dt_sum).count() << " ticks" << endl;
         _dt_sum = chrono::high_resolution_clock::duration();
         _ticks = 0;
     }
     _prev_tick_time = t;
 }
 
+void CPU::reset_timer() {
+    _prev_tick_time = chrono::high_resolution_clock::now();
+}
+
 void CPU::interrupt(uint18 address) {
-    UnibusDevice::interrupt(address);
     _waiting = false;
     stack_push(_psw.ps);
     stack_push(_pc.r);
-    _pc.r = _unibus->read_word(address);
-    _psw.ps = (uint8) _unibus->read_word(address + 2);
+    _pc.r = read_memory_word(address);
+    _psw.ps = (uint8) read_memory_word(address + 2);
     _pc_step = 0;
 }
 
@@ -824,7 +858,7 @@ void CPU::opcode_jmp(uint16 opcode) {
 void CPU::opcode_jsr(uint16 opcode) {
     uint16 tmp16 = get_destination_value(opcode);
     uint16 reg_n = (uint16) ((opcode >> 6) & 07);
-    _r[reg_n].r = _pc.r + _pc_step;
+    _r[reg_n].r = (uint16) (_pc.r + _pc_step);
     stack_push(_r[reg_n].r);
     _pc_step = 0;
     _pc.r = tmp16;
@@ -841,7 +875,7 @@ void CPU::opcode_mark(uint16 opcode) {
     uint16 nn = (uint16) (opcode & 077);
     _sp.r = _sp.r + (nn << 1);
     _pc.r = _r[5].r;
-    _r[5].r = _unibus->read_word(_sp.r);
+    _r[5].r = read_memory_word(_sp.r);
 }
 
 void CPU::opcode_sob(uint16 opcode) {
@@ -852,36 +886,20 @@ void CPU::opcode_sob(uint16 opcode) {
         _pc.r = _pc.r - (offset << 1);
 }
 
-void CPU::opcode_emt(uint16 opcode) { // TODO: Check this instruction
-    stack_push(_psw.ps);
-    stack_push(_pc.r);
-    _pc.r = _unibus->read_word(030);
-    _psw.ps = (uint8) _unibus->read_word(032);
-    _pc_step = 0;
+void CPU::opcode_emt(uint16 opcode) {
+    interrupt(030);
 }
 
-void CPU::opcode_trap(uint16 opcode) { // TODO: Check this instruction
-    stack_push(_psw.ps);
-    stack_push(_pc.r);
-    _pc.r = _unibus->read_word(034);
-    _psw.ps = (uint8) _unibus->read_word(036);
-    _pc_step = 0;
+void CPU::opcode_trap(uint16 opcode) {
+    interrupt(034);
 }
 
-void CPU::opcode_bpt(uint16 opcode) { // TODO: Check this instruction
-    stack_push(_psw.ps);
-    stack_push(_pc.r);
-    _pc.r = _unibus->read_word(014);
-    _psw.ps = (uint8) _unibus->read_word(016);
-    _pc_step = 0;
+void CPU::opcode_bpt(uint16 opcode) {
+    interrupt(014);
 }
 
-void CPU::opcode_iot(uint16 opcode) { // TODO: Check this instruction
-    stack_push(_psw.ps);
-    stack_push(_pc.r);
-    _pc.r = _unibus->read_word(020);
-    _psw.ps = (uint8) _unibus->read_word(022);
-    _pc_step = 0;
+void CPU::opcode_iot(uint16 opcode) {
+    interrupt(020);
 }
 
 void CPU::opcode_rti(uint16 opcode) { // TODO: Check this instruction
@@ -907,7 +925,7 @@ void CPU::opcode_wait(uint16 opcode) {
 }
 
 void CPU::opcode_reset(uint16 opcode) {
-    _unibus->set_init_line(10);
+    _unibus->set_init_line();
 }
 
 void CPU::opcode_cco(uint16 opcode) {
@@ -920,12 +938,4 @@ void CPU::opcode_cco(uint16 opcode) {
         _psw.Z = val;
     if ((opcode & 0000010) == 0000010)
         _psw.N = val;
-}
-
-Register CPU::get_register(int i) {
-    return _r[i];
-}
-
-PSW CPU::get_psw() {
-    return _psw;
 }

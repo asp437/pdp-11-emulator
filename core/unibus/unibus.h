@@ -24,7 +24,7 @@ public:
     void br_request(UnibusDevice *device, uint8 priority);
     void cpu_interrupt(uint18 address);
 
-    void set_init_line(uint32 ms);
+    void set_init_line();
     void master_device_execute();
 private:
     UnibusDeviceConfiguration *get_registered_device(uint18 address);

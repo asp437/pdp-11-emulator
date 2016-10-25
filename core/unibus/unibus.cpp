@@ -73,7 +73,7 @@ UnibusDeviceConfiguration *Unibus::get_registered_device(uint18 address) {
     return nullptr;
 }
 
-void Unibus::set_init_line(uint32 ms) {
+void Unibus::set_init_line() {
     // TODO: Time synchronization
     for (auto it = _registered_devices.begin(); it != _registered_devices.end(); ++it) {
         (*it)->get_device()->reset();

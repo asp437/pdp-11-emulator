@@ -106,6 +106,8 @@ void MainWindow::on_load_rom_button_clicked() {
 }
 
 void MainWindow::on_run_button_clicked() {
+    if (_pdp_machine != nullptr)
+        _pdp_machine->reset_timer();
     _clock_timer->start();
 }
 

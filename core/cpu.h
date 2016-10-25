@@ -38,6 +38,7 @@ struct CPUInstruction {
     string mnemonic;
     uint16 opcode_mask;
     uint16 opcode_signature;
+    uint8 time;
     void (CPU::*opcode_func)(uint16);
 };
 
@@ -62,7 +63,7 @@ public:
     virtual ~CPU();
 
     string get_name() override { return "Central Processing Unit"; }
-    void reset() override;
+    void reset() override {}; // Ignore bus-reset, because it's caused by CPU RESET instruction
 
     uint16 read_word(uint18 address, uint18 base_address) override;
     void write_word(uint18 address, uint18 base_address, uint16 value) override;
@@ -74,17 +75,18 @@ public:
     bool is_busy() override { return false; }
     bool is_halted() { return _halted; }
 
-    Register get_register(int i);
-    PSW get_psw();
     vector<CPUInstruction> get_instruction_set() { return _instruction_set; }
+    Register get_register(int i) { return _r[i]; }
+    PSW get_psw() { return _psw; }
 
     static InstructionOperand decode_src_operand(uint16 opcode);
     static InstructionOperand decode_dst_operand(uint16 opcode);
+    void reset_timer();
 
     static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
     static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 077;
 private:
-    void register_instruction(string mnemonic, uint16 mask, uint16 signature, void(CPU::*opcode_f)(uint16));
+    void register_instruction(string mnemonic, uint16 mask, uint16 signature, void(CPU::*opcode_f)(uint16), uint8 time = 3);
 
     void set_value(InstructionOperand operand, uint16 value, bool byte_wide, bool update_pointers);
     uint16 get_value(InstructionOperand operand, bool byte_wide, bool update_pointers);
@@ -94,6 +96,11 @@ private:
     void set_destination_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);
     uint16 get_destination_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);
     uint16 get_source_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);
+
+    uint16 read_memory_word(uint18 address);
+    void write_memory_word(uint18 address, uint16 value);
+    uint8 read_memory_byte(uint18 address);
+    void write_memory_byte(uint18 address, uint8 value);
 
     void stack_push(uint16 value);
     uint16 stack_pop();
@@ -198,13 +205,15 @@ private:
         };
     };
     PSW _psw;
-    int _pc_step; // In bytes
+    int16 _pc_step; // In bytes
     bool _waiting;
     bool _halted;
 
     vector<CPUInstruction> _instruction_set;
 
     int _ticks;
+    int _emulated_ticks;
+    int _ticks_per_second;
     chrono::high_resolution_clock::duration _dt_sum;
     chrono::high_resolution_clock::time_point _prev_tick_time;
 };

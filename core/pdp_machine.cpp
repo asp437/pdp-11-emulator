@@ -65,3 +65,7 @@ vector<pair<string, uint16>> PDPMachine::get_disasm(uint18 address, uint18 size)
 void PDPMachine::key_pressed(uint keycode, bool key_down) {
     _keyboard->key_pressed(keycode, key_down);
 }
+
+void PDPMachine::reset_timer() {
+    _cpu->reset_timer();
+}
