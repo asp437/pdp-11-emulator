@@ -84,13 +84,12 @@ public:
     static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
     static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 077;
 private:
-    void register_instruction(string mnemonic,
-                              uint16 opcode_mask,
-                              uint16 opcode_signature,
-                              void(CPU::*opcode_f)(uint16));
+    void register_instruction(string mnemonic, uint16 mask, uint16 signature, void(CPU::*opcode_f)(uint16));
 
     void set_value(InstructionOperand operand, uint16 value, bool byte_wide, bool update_pointers);
     uint16 get_value(InstructionOperand operand, bool byte_wide, bool update_pointers);
+
+    uint18 get_operand_address(InstructionOperand operand, bool byte_wide, bool update_pointers);
 
     void set_destination_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);
     uint16 get_destination_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);

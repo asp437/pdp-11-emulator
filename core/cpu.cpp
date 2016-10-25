@@ -140,188 +140,108 @@ void CPU::write_byte(uint18 address, uint18 base_address, uint8 value) {
     throw new runtime_error("CPU doesn't support byte writing");
 }
 
-void CPU::register_instruction(string mnemonic,
-                               uint16 opcode_mask,
-                               uint16 opcode_signature,
-                               void (CPU::*opcode_f)(uint16)) {
+void CPU::register_instruction(string mnemonic, uint16 mask, uint16 signature, void (CPU::*opcode_f)(uint16)) {
     CPUInstruction instruction;
     instruction.mnemonic = mnemonic;
-    instruction.opcode_mask = opcode_mask;
-    instruction.opcode_signature = opcode_signature;
+    instruction.opcode_mask = mask;
+    instruction.opcode_signature = signature;
     instruction.opcode_func = opcode_f;
     _instruction_set.push_back(instruction);
 
     ios_base::fmtflags cout_flags = cout.flags();
     cout << "CPU Instruction " << setw(5) << mnemonic << " (OPCODE SIGNATURE " << oct << setfill('0') << setw(7)
-         << opcode_signature << ") registered." << endl;
+         << signature << ") registered." << endl;
     cout << setfill(' ') << setw(0);
     cout.flags(cout_flags);
 }
 
 void CPU::set_value(InstructionOperand operand, uint16 value, bool byte_wide, bool update_pointers) {
-    uint16 index;
-    uint16 pointer;
-
-    switch (operand.mode) {
-        case 0: // Register
-            this->_r[operand.register_addr].r = value;
-            break;
-        case 1: // Register Deferred
-            if (byte_wide)
-                _unibus->write_byte(this->_r[operand.register_addr].r, (uint8) value);
-            else
-                _unibus->write_word(this->_r[operand.register_addr].r, value);
-            break;
-        case 2: // Autoincrement
-            if (byte_wide) {
-                _unibus->write_byte(this->_r[operand.register_addr].r, (uint8) value);
-                this->_r[operand.register_addr].r += update_pointers ? 1 : 0;
-            } else {
-                _unibus->write_word(this->_r[operand.register_addr].r, value);
-                if (operand.register_addr == 07)
-                    _pc_step += 2;
-                else
-                    this->_r[operand.register_addr].r += update_pointers ? 2 : 0;
-            }
-            break;
-        case 3: // Autoincrement Deferred
-            pointer = _unibus->read_word(
-                operand.register_addr == 07 ? this->_r[operand.register_addr].r + operand.index_offset
-                                            : this->_r[operand.register_addr].r);
-            if (byte_wide) {
-                _unibus->write_byte(pointer, (uint8) value);
-            } else {
-                _unibus->write_word(pointer, value);
-            }
-            if (operand.register_addr == 07)
-                _pc_step += update_pointers ? 2 : 0;
-            else
-                this->_r[operand.register_addr].r += update_pointers ? 2 : 0;
-            break;
-        case 4: // Autodecrement
-            if (byte_wide) {
-                this->_r[operand.register_addr].r -= update_pointers ? 1 : 0;
-                _unibus->write_byte(this->_r[operand.register_addr].r, (uint8) value);
-            } else {
-                this->_r[operand.register_addr].r -= update_pointers ? 2 : 0;
-                _unibus->write_word(this->_r[operand.register_addr].r, value);
-            }
-            break;
-        case 5: // Autodecrement Deferred
-            pointer = _unibus->read_word(this->_r[operand.register_addr].r);
-            if (byte_wide) {
-                _unibus->write_byte(pointer, (uint8) value);
-            } else {
-                _unibus->write_word(pointer, value);
-            }
-            this->_r[operand.register_addr].r -= update_pointers ? 2 : 0;
-            break;
-        case 6: // Index
-            index = _unibus->read_word(_pc.r + operand.index_offset);
-            if (update_pointers)
-                _pc_step += 2;
-            if (byte_wide) {
-                _unibus->write_byte(this->_r[operand.register_addr].r + index, (uint8) value);
-            } else {
-                _unibus->write_word(this->_r[operand.register_addr].r + index, value);
-            }
-            break;
-        case 7: // Index Deferred
-            index = _unibus->read_word(_pc.r + operand.index_offset);
-            pointer = _unibus->read_word(this->_r[operand.register_addr].r + index);
-            if (update_pointers)
-                _pc_step += 2;
-            if (byte_wide) {
-                _unibus->write_byte(pointer, (uint8) value);
-            } else {
-                _unibus->write_word(pointer, value);
-            }
-            break;
-        default:
-            throw new runtime_error("Wrong addressing mode");
+    if (operand.mode == 0) {
+        this->_r[operand.register_addr].r = value;
+    } else {
+        uint18 address = get_operand_address(operand, byte_wide, update_pointers);
+        if (byte_wide) {
+            _unibus->write_byte(address, (uint8) value);
+        } else {
+            _unibus->write_word(address, value);
+        }
     }
 }
 
 uint16 CPU::get_value(InstructionOperand operand, bool byte_wide, bool update_pointers) {
+    if (operand.mode == 0) {
+        return this->_r[operand.register_addr].r;
+    } else {
+        uint18 address = get_operand_address(operand, byte_wide, update_pointers);
+        if (byte_wide) {
+            return _unibus->read_byte(address);
+        } else {
+            return _unibus->read_word(address);
+        }
+    }
+}
+
+uint18 CPU::get_operand_address(InstructionOperand operand, bool byte_wide, bool update_pointers) {
     uint16 index;
-    uint16 pointer;
-    uint16 value;
+    uint18 result;
 
     switch (operand.mode) {
-        case 0: // Register
-            return this->_r[operand.register_addr].r;
         case 1: // Register Deferred
-            if (byte_wide)
-                return _unibus->read_byte(this->_r[operand.register_addr].r);
-            else
-                return _unibus->read_word(this->_r[operand.register_addr].r);
+            result = this->_r[operand.register_addr].r;
+            break;
         case 2: // Autoincrement
+            result = operand.register_addr == 07 ? this->_r[operand.register_addr].r + operand.index_offset
+                                                 : this->_r[operand.register_addr].r;
             if (byte_wide) {
-                value = _unibus->read_byte(this->_r[operand.register_addr].r);
                 this->_r[operand.register_addr].r += update_pointers ? 1 : 0;
             } else {
-                value =
-                    _unibus->read_word(
-                        operand.register_addr == 07 ? this->_r[operand.register_addr].r + operand.index_offset
-                                                    : this->_r[operand.register_addr].r);
                 if (operand.register_addr == 07)
                     _pc_step += 2;
                 else
                     this->_r[operand.register_addr].r += update_pointers ? 2 : 0;
             }
-            return value;
+            break;
         case 3: // Autoincrement Deferred
-            pointer = _unibus->read_word(
+            result = _unibus->read_word(
                 operand.register_addr == 07 ? this->_r[operand.register_addr].r + operand.index_offset
                                             : this->_r[operand.register_addr].r);
-            if (byte_wide) {
-                value = _unibus->read_byte(pointer);
-            } else {
-                value = _unibus->read_word(pointer);
-            }
             if (operand.register_addr == 07)
                 _pc_step += update_pointers ? 2 : 0;
             else
                 this->_r[operand.register_addr].r += update_pointers ? 2 : 0;
-            return value;
+            break;
         case 4: // Autodecrement
             if (byte_wide) {
                 this->_r[operand.register_addr].r -= update_pointers ? 1 : 0;
-                return _unibus->read_byte(this->_r[operand.register_addr].r);
             } else {
                 this->_r[operand.register_addr].r -= update_pointers ? 2 : 0;
-                return _unibus->read_word(this->_r[operand.register_addr].r);
             }
+            result = this->_r[operand.register_addr].r;
+            break;
         case 5: // Autodecrement Deferred
-            this->_r[operand.register_addr].r -= update_pointers ? 2 : 0;
-            pointer = _unibus->read_word(this->_r[operand.register_addr].r);
             if (byte_wide) {
-                return _unibus->read_byte(pointer);
+                this->_r[operand.register_addr].r -= update_pointers ? 1 : 0;
             } else {
-                return _unibus->read_word(pointer);
+                this->_r[operand.register_addr].r -= update_pointers ? 2 : 0;
             }
+            result = _unibus->read_word(this->_r[operand.register_addr].r);
+            break;
         case 6: // Index
             index = _unibus->read_word(_pc.r + operand.index_offset);
+            result = this->_r[operand.register_addr].r + index;
             if (update_pointers)
                 _pc_step += 2;
-            if (byte_wide) {
-                return _unibus->read_byte(this->_r[operand.register_addr].r + index);
-            } else {
-                return _unibus->read_word(this->_r[operand.register_addr].r + index);
-            }
+            break;
         case 7: // Index Deferred
             index = _unibus->read_word(_pc.r + operand.index_offset);
-            pointer = _unibus->read_word(this->_r[operand.register_addr].r + index);
+            result = _unibus->read_word(this->_r[operand.register_addr].r + index);
             if (update_pointers)
                 _pc_step += 2;
-            if (byte_wide) {
-                return _unibus->read_byte(pointer);
-            } else {
-                return _unibus->read_word(pointer);
-            }
+            break;
         default:
             throw new runtime_error("Wrong addressing mode");
     }
+    return result;
 }
 
 InstructionOperand CPU::decode_src_operand(uint16 opcode) {
