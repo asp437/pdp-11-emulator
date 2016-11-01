@@ -160,7 +160,8 @@ void CPU::set_value(InstructionOperand operand, uint16 value, bool byte_wide, bo
         this->_r[operand.register_addr].r = value;
         _emulated_ticks += 1;
     } else {
-        uint18 address = get_operand_address(operand, byte_wide, update_pointers);
+        get_operand_address(operand, byte_wide, update_pointers);
+        uint18 address = operand.memory_address;
         if (byte_wide) {
             write_memory_byte(address, (uint8) value);
         } else {
@@ -173,7 +174,8 @@ uint16 CPU::get_value(InstructionOperand operand, bool byte_wide, bool update_po
     if (operand.mode == 0) {
         return this->_r[operand.register_addr].r;
     } else {
-        uint18 address = get_operand_address(operand, byte_wide, update_pointers);
+        get_operand_address(operand, byte_wide, update_pointers);
+        uint18 address = operand.memory_address;
         if (byte_wide) {
             return read_memory_byte(address);
         } else {
@@ -182,17 +184,16 @@ uint16 CPU::get_value(InstructionOperand operand, bool byte_wide, bool update_po
     }
 }
 
-uint18 CPU::get_operand_address(InstructionOperand operand, bool byte_wide, bool update_pointers) {
+void CPU::get_operand_address(InstructionOperand &operand, bool byte_wide, bool update_pointers) {
     uint16 index;
-    uint18 result;
 
     switch (operand.mode) {
         case 1: // Register Deferred
-            result = this->_r[operand.register_addr].r;
+            operand.memory_address = this->_r[operand.register_addr].r;
             break;
         case 2: // Autoincrement
-            result = operand.register_addr == 07 ? this->_r[operand.register_addr].r + operand.index_offset
-                                                 : this->_r[operand.register_addr].r;
+            operand.memory_address = operand.register_addr == 07 ? this->_r[operand.register_addr].r + operand.index_offset
+                                                                 : this->_r[operand.register_addr].r;
             if (byte_wide) {
                 this->_r[operand.register_addr].r += update_pointers ? 1 : 0;
             } else {
@@ -203,7 +204,7 @@ uint18 CPU::get_operand_address(InstructionOperand operand, bool byte_wide, bool
             }
             break;
         case 3: // Autoincrement Deferred
-            result = read_memory_word(
+            operand.memory_address = read_memory_word(
                 operand.register_addr == 07 ? this->_r[operand.register_addr].r + operand.index_offset
                                             : this->_r[operand.register_addr].r);
             if (operand.register_addr == 07)
@@ -217,7 +218,7 @@ uint18 CPU::get_operand_address(InstructionOperand operand, bool byte_wide, bool
             } else {
                 this->_r[operand.register_addr].r -= update_pointers ? 2 : 0;
             }
-            result = this->_r[operand.register_addr].r;
+            operand.memory_address = this->_r[operand.register_addr].r;
             break;
         case 5: // Autodecrement Deferred
             if (byte_wide) {
@@ -225,24 +226,23 @@ uint18 CPU::get_operand_address(InstructionOperand operand, bool byte_wide, bool
             } else {
                 this->_r[operand.register_addr].r -= update_pointers ? 2 : 0;
             }
-            result = read_memory_word(this->_r[operand.register_addr].r);
+            operand.memory_address = read_memory_word(this->_r[operand.register_addr].r);
             break;
         case 6: // Index
             index = read_memory_word(_pc.r + operand.index_offset);
-            result = this->_r[operand.register_addr].r + index;
+            operand.memory_address = this->_r[operand.register_addr].r + index;
             if (update_pointers)
                 _pc_step += 2;
             break;
         case 7: // Index Deferred
             index = read_memory_word(_pc.r + operand.index_offset);
-            result = read_memory_word(this->_r[operand.register_addr].r + index);
+            operand.memory_address = read_memory_word(this->_r[operand.register_addr].r + index);
             if (update_pointers)
                 _pc_step += 2;
             break;
         default:
             throw new runtime_error("Wrong addressing mode");
     }
-    return result;
 }
 
 InstructionOperand CPU::decode_src_operand(uint16 opcode) {

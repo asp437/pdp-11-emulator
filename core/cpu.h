@@ -46,6 +46,27 @@ struct InstructionOperand {
     uint8 mode;
     uint8 register_addr;
     uint16 index_offset;
+    uint16 memory_address;
+};
+
+typedef enum _PIPELINE_STAGE {
+    PS_FETCHING = 0,
+    PS_DECODING,
+    PS_FETCHING_SRC,
+    PS_FETCHING_DST,
+    PS_EXECUTING,
+    PS_WRITE_BACK
+} PIPELINE_STAGE;
+
+struct PipelinedInstruction {
+    PIPELINE_STAGE stage;
+    int stage_ticks_left;
+    int ticks_processed;
+    CPUInstruction instruction;
+    InstructionOperand src_operand;
+    InstructionOperand dst_operand;
+    uint16 src_value;
+    uint16 dst_value;
 };
 
 const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0177700;
@@ -91,7 +112,7 @@ private:
     void set_value(InstructionOperand operand, uint16 value, bool byte_wide, bool update_pointers);
     uint16 get_value(InstructionOperand operand, bool byte_wide, bool update_pointers);
 
-    uint18 get_operand_address(InstructionOperand operand, bool byte_wide, bool update_pointers);
+    void get_operand_address(InstructionOperand &operand, bool byte_wide, bool update_pointers);
 
     void set_destination_value(uint16 opcode, uint16 value, bool byte_wide = false, bool update_pointers = true);
     uint16 get_destination_value(uint16 opcode, bool byte_wide = false, bool update_pointers = true);
@@ -204,6 +225,7 @@ private:
             Register _pc;
         };
     };
+
     PSW _psw;
     int16 _pc_step; // In bytes
     bool _waiting;

@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     _clock_timer = new QTimer();
     _display_timer = new QTimer();
     _clock_timer->setInterval(0);
-    _display_timer->setInterval(1000.0 / 20.0);
+    _display_timer->setInterval(1000.0 / 60.0);
     connect(_clock_timer, SIGNAL(timeout()), this, SLOT(clock_update()));
     connect(_display_timer, SIGNAL(timeout()), this, SLOT(display_update()));
     // _clock_timer->start();
@@ -116,6 +116,7 @@ void MainWindow::on_step_button_clicked() {
     if (_pdp_machine != nullptr) {
         _pdp_machine->execute_command();
         update_cpu_registers_view();
+        on_jump_to_mem_edit_returnPressed();
     }
 }
 
@@ -137,6 +138,7 @@ void MainWindow::clock_update() {
             std::cout << "PDP Machine halted" << std::endl;
             _clock_timer->stop();
             update_cpu_registers_view();
+            on_jump_to_mem_edit_returnPressed();
         }
     }
 }
