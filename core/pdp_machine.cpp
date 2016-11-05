@@ -5,7 +5,7 @@
 #include "pdp_machine.h"
 #include "unibus/unibus.h"
 #include "memory/ram.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "memory/rom.h"
 #include "utils/disasm.h"
 #include "io_devices/pdp_keyboard.h"

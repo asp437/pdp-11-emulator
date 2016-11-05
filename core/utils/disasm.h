@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "../unibus/unibus.h"
-#include "../cpu.h"
+#include "../cpu/cpu.h"
 
 class DisAsm {
 public:

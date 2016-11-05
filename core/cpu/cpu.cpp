@@ -100,6 +100,7 @@ CPU::CPU() {
     _emulated_ticks = 0;
     _ticks_per_second = 5000000;
     _prev_tick_time = chrono::high_resolution_clock::now();
+    _cache = new CPUCache();
 
     cout << "CPU initialization complete. Totally registered " << _instruction_set.size() << " instructions." << endl;
 }
@@ -109,7 +110,13 @@ CPU::~CPU() {
     _unibus = nullptr;
     memset(_r, 0, sizeof(_r));
     _pc_step = 0;
+    delete _cache;
 }
+
+void CPU::register_unibus(Unibus *unibus) {
+    this->_cache->register_unibus(unibus);
+    this->_unibus = unibus;
+};
 
 uint16 CPU::read_word(uint18 address, uint18 base_address) {
     if (address >= BASE_MEM_MAP_SEGMENT_ADDRESS && address < BASE_MEM_MAP_SEGMENT_ADDRESS + 020) {
@@ -279,23 +286,23 @@ uint16 CPU::get_source_value(uint16 opcode, bool byte_wide, bool update_pointers
 }
 
 uint16 CPU::read_memory_word(uint18 address) {
-    _emulated_ticks += 2;
-    return _unibus->read_word(address);
+    pair<uint16, uint> result = _cache->read_word(address);
+    _emulated_ticks += result.second;
+    return result.first;
 }
 
 void CPU::write_memory_word(uint18 address, uint16 value) {
-    _emulated_ticks += 2;
-    _unibus->write_word(address, value);
+    _emulated_ticks += _cache->write_word(address, value);
 }
 
 uint8 CPU::read_memory_byte(uint18 address) {
-    _emulated_ticks += 2;
-    return _unibus->read_byte(address);
+    pair<uint8, uint> result = _cache->read_byte(address);
+    _emulated_ticks += result.second;
+    return result.first;
 }
 
 void CPU::write_memory_byte(uint18 address, uint8 value) {
-    _emulated_ticks += 2;
-    _unibus->write_byte(address, value);
+    _emulated_ticks += _cache->write_byte(address, value);
 }
 
 void CPU::stack_push(uint16 value) {

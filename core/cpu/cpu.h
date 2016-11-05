@@ -5,11 +5,12 @@
 #ifndef PDP_11_EMULATOR_CPU_H
 #define PDP_11_EMULATOR_CPU_H
 
-#include "../common.h"
+#include "../../common.h"
 
 #include <chrono>
 
-#include "unibus/unibus.h"
+#include "../unibus/unibus.h"
+#include "cpu_cache.h"
 
 class CPU;
 
@@ -82,6 +83,7 @@ class CPU : public UnibusDevice {
 public:
     CPU();
     virtual ~CPU();
+    void register_unibus(Unibus *unibus);
 
     string get_name() override { return "Central Processing Unit"; }
     void reset() override {}; // Ignore bus-reset, because it's caused by CPU RESET instruction
@@ -238,6 +240,7 @@ private:
     int _ticks_per_second;
     chrono::high_resolution_clock::duration _dt_sum;
     chrono::high_resolution_clock::time_point _prev_tick_time;
+    CPUCache *_cache;
 };
 
 #endif //PDP_11_EMULATOR_CPU_H
