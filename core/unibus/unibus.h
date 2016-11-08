@@ -22,7 +22,7 @@ public:
     void write_byte(uint18 address, uint8 value);
     void npr_request(UnibusDevice *device);
     void br_request(UnibusDevice *device, uint8 priority);
-    void cpu_interrupt(uint18 address);
+    void cpu_interrupt(uint18 address, int priority);
 
     void set_init_line();
     void master_device_execute();

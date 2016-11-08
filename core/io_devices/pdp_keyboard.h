@@ -30,6 +30,7 @@ public:
     static const uint18 PDP_KEYBOARD_HANDLER_PC_LOCATION_REGISTER = 0176002;
     static const uint18 PDP_KEYBOARD_HANDLER_PSW_LOCATION_REGISTER = 0176004;
     static const uint18 PDP_KEYBOARD_REGISTERS_SIZE = 000006;
+    static const int PDP_KEYBOARD_INTERRUPT_PRIORITY = 6;
 private:
     uint16 _key_code;
     uint16 _handler_pc;

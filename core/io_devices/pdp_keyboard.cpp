@@ -111,6 +111,6 @@ void PDPKeyboard::key_pressed(int keycode, bool key_down) {
         _key_code |= _shift_pressed ? (1 << 6) : 0;
         _key_code |= _ctrl_pressed ? (1 << 7) : 0;
         _key_code |= key_down ? (1 << 9) : 0;
-        _unibus->cpu_interrupt(PDP_KEYBOARD_HANDLER_PC_LOCATION_REGISTER);
+        _unibus->cpu_interrupt(PDP_KEYBOARD_HANDLER_PC_LOCATION_REGISTER, PDP_KEYBOARD_INTERRUPT_PRIORITY);
     }
 }

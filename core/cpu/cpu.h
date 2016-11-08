@@ -112,7 +112,7 @@ public:
     void write_byte(uint18 address, uint18 base_address, uint8 value) override;
 
     void execute();
-    void interrupt(uint18 address) override;
+    void interrupt(uint18 address, int priority) override;
     bool is_busy() override { return false; }
     bool is_halted() { return _halted; }
 
@@ -158,8 +158,11 @@ private:
     pair<uint8, uint> read_memory_byte(uint18 address);
     uint write_memory_byte(uint18 address, uint8 value);
 
-    void stack_push(uint16 value);
-    uint16 stack_pop();
+    void stack_push(uint16 value, PipelinedInstruction &instruction);
+    uint16 stack_pop(PipelinedInstruction &);
+
+    void immediate_interrupt(uint16 address, uint16 next_address);
+    void check_delayed_interrupt();
 
     uint8 is_negative16(uint16 value) { return (uint8) (value >> 15); }
     uint8 is_negative8(uint8 value) { return (uint8) (value >> 7); }
@@ -268,6 +271,9 @@ private:
 
     vector<CPUInstruction> _instruction_set;
 
+    bool _delayed_interrupt;
+    uint16 _delayed_interrupt_vector;
+    uint16 _delayed_interrupt_next_address;
     uint64 _ticks;
     CPUCache *_cache;
     PipelinedInstruction _pipeline_stages[PS_PIPELINE_LENGTH];

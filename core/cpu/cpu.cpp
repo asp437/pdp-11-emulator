@@ -97,6 +97,9 @@ CPU::CPU() {
     _r[6].r = 16 * 1024;
     _pc.r = 0140000;
 
+    _delayed_interrupt = false;
+    _delayed_interrupt_vector = 0;
+
     _ticks = 0;
     _cache = new CPUCache();
     _memory_block = PS_PIPELINE_LENGTH;
@@ -217,41 +220,77 @@ uint CPU::write_memory_byte(uint18 address, uint8 value) {
     return _cache->write_byte(address, value);
 }
 
-void CPU::stack_push(uint16 value) {
-    // TODO: Add read latency to appropriate counter
+void CPU::stack_push(uint16 value, PipelinedInstruction &instruction) {
+    // TODO: Check race condition
     _sp.r -= 2;
-    write_memory_word(_sp.r, value);
+    instruction.stage_ticks_left += write_memory_word(_sp.r, value);
 }
 
-uint16 CPU::stack_pop() {
-    // TODO: Add read latency to appropriate counter
-    uint16 val = read_memory_word(_sp.r).first;
+uint16 CPU::stack_pop(PipelinedInstruction &instruction) {
+    // TODO: Check race condition
+    pair<uint16, uint> mem_read_result = read_memory_word(_sp.r);
+    instruction.stage_ticks_left += mem_read_result.second;
     _sp.r += 2;
-    return val;
+    return mem_read_result.first;
 }
 
 void CPU::execute() {
-    if (_waiting || _halted) {
+    if (_halted)
         return;
-    }
 
     write_back_stage();
     execute_stage();
+
+    if (_waiting)
+        return;
+
     fetch_dst_stage();
     fetch_src_stage();
     decode_stage();
     fetch_stage();
+    check_delayed_interrupt();
     _ticks++;
 }
 
-void CPU::interrupt(uint18 address) {
-    // TODO: Check memory blocking, add memory reading time to tick counter
-    _waiting = false;
-    stack_push(_psw.ps);
-    stack_push(_pipeline_stages[PS_EXECUTING].address);
-    reset_pipeline_before(PS_WRITE_BACK);
+void CPU::interrupt(uint18 address, int priority) {
+    if (_psw.I > priority)
+        return;
+
+    // Immediately handle interrupt if CPU is waiting, and all previous operations completed
+    if (_waiting && !_pipeline_stages[PS_EXECUTING].stage_busy && !_pipeline_stages[PS_WRITE_BACK].stage_busy) {
+        _waiting = false;
+        // Waiting state possible only after WAIT instruction
+        // WAIT instruction blocks executing of next instruction
+        // Therefore, PS_EXECUTING stores information about last executed instruction, the WAIT instruction
+        immediate_interrupt((uint16) address,
+                            _pipeline_stages[PS_EXECUTING].address + _pipeline_stages[PS_EXECUTING].opcode_size);
+    } else {
+        _delayed_interrupt = true;
+        _delayed_interrupt_vector = (uint16) address;
+        _delayed_interrupt_next_address = _pipeline_stages[PS_EXECUTING].address + _pipeline_stages[PS_EXECUTING].opcode_size;
+
+        // Reset and temporary disable all stages, except PS_EXECUTING and PS_WRITE_BACK
+        for (int stage = PS_FETCHING; stage < PS_EXECUTING; stage++)
+            _pipeline_stages[stage].stage_busy = false;
+    }
+}
+
+void CPU::immediate_interrupt(uint16 address, uint16 next_address) {
+    _sp.r -= 2;
+    write_memory_word(_sp.r, _psw.ps);
+    _sp.r -= 2;
+    write_memory_word(_sp.r, next_address);
+    reset_pipeline_before(PS_EXECUTING);
     _pc.r = read_memory_word(address).first;
     _psw.ps = (uint8) read_memory_word(address + 2).first;
+}
+
+void CPU::check_delayed_interrupt() {
+    if (_delayed_interrupt && !_pipeline_stages[PS_EXECUTING].stage_busy && !_pipeline_stages[PS_WRITE_BACK].stage_busy) {
+        immediate_interrupt(_delayed_interrupt_vector, _delayed_interrupt_next_address);
+        _delayed_interrupt = false;
+        _pipeline_stages[PS_FETCHING].stage_busy = true; // Enable instruction fetching
+    }
 }
 
 void CPU::opcode_clr(PipelinedInstruction &instruction) {
@@ -714,7 +753,7 @@ void CPU::opcode_jmp(PipelinedInstruction &instruction) {
 
 void CPU::opcode_jsr(PipelinedInstruction &instruction) {
     _r[instruction.register_index].r = _pipeline_stages[PS_EXECUTING].address + _pipeline_stages[PS_EXECUTING].opcode_size;
-    stack_push(_r[instruction.register_index].r);
+    stack_push(_r[instruction.register_index].r, instruction);
     uint16 new_pc = instruction.dst_value;
     reset_pipeline_before(PS_EXECUTING);
     _pc.r = new_pc;
@@ -723,7 +762,7 @@ void CPU::opcode_jsr(PipelinedInstruction &instruction) {
 void CPU::opcode_rts(PipelinedInstruction &instruction) {
     reset_pipeline_before(PS_EXECUTING);
     _pc.r = _r[instruction.register_index].r;
-    _r[instruction.register_index].r = stack_pop();
+    _r[instruction.register_index].r = stack_pop(instruction);
 }
 
 void CPU::opcode_mark(PipelinedInstruction &instruction) {
@@ -743,31 +782,31 @@ void CPU::opcode_sob(PipelinedInstruction &instruction) {
 }
 
 void CPU::opcode_emt(PipelinedInstruction &instruction) {
-    interrupt(030);
+    interrupt(030, 8);
 }
 
 void CPU::opcode_trap(PipelinedInstruction &instruction) {
-    interrupt(034);
+    interrupt(034, 8);
 }
 
 void CPU::opcode_bpt(PipelinedInstruction &instruction) {
-    interrupt(014);
+    interrupt(014, 8);
 }
 
 void CPU::opcode_iot(PipelinedInstruction &instruction) {
-    interrupt(020);
+    interrupt(020, 8);
 }
 
 void CPU::opcode_rti(PipelinedInstruction &instruction) {
     reset_pipeline_before(PS_EXECUTING);
-    _pc.r = stack_pop();
-    _psw.ps = (uint8) stack_pop();
+    _pc.r = stack_pop(instruction);
+    _psw.ps = (uint8) stack_pop(instruction);
 }
 
 void CPU::opcode_rtt(PipelinedInstruction &instruction) {
     reset_pipeline_before(PS_EXECUTING);
-    _pc.r = stack_pop();
-    _psw.ps = (uint8) stack_pop();
+    _pc.r = stack_pop(instruction);
+    _psw.ps = (uint8) stack_pop(instruction);
 }
 
 void CPU::opcode_halt(PipelinedInstruction &instruction) {

@@ -134,7 +134,7 @@ void Unibus::br_request(UnibusDevice *device, uint8 priority) {
     _master_requests_queue.push_back(make_pair(priority, device_configuration));
 }
 
-void Unibus::cpu_interrupt(uint18 address) {
+void Unibus::cpu_interrupt(uint18 address, int priority) {
     UnibusDeviceConfiguration *cpu_device_configuration = get_registered_device(CPU_PSW_ADDRESS);
-    cpu_device_configuration->get_device()->interrupt(address);
+    cpu_device_configuration->get_device()->interrupt(address, priority);
 }
