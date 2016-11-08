@@ -19,13 +19,13 @@ vector <pair<string, uint16>> DisAsm::disasm_code(uint18 base_address, uint18 si
 
 pair <string, uint16> DisAsm::get_dst_operand(uint16 opcode, uint18 opcode_address) {
     InstructionOperand operand = CPU::decode_dst_operand(opcode);
-    operand.index_offset += 2;
+//    operand.index_offset += 2;
     return get_operand_value(operand, opcode_address);
 }
 
 pair <string, uint16> DisAsm::get_src_operand(uint16 opcode, uint18 opcode_address) {
     InstructionOperand operand = CPU::decode_src_operand(opcode);
-    operand.index_offset += 2;
+//    operand.index_offset += 2;
     return get_operand_value(operand, opcode_address);
 }
 

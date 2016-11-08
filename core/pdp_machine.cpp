@@ -27,6 +27,10 @@ PDPMachine::PDPMachine(string rom_file) : _rom_file_name(rom_file) {
     _unibus->register_device(_display_adapter,
                              PDPDisplayAdapter::PDP_VIDEO_ADAPTER_VRAM_ADDRESS,
                              PDPDisplayAdapter::PDP_VIDEO_ADAPTER_VRAM_SIZE);
+
+    _emulated_ticks = 0;
+    _ticks_per_second = PDP11_FREQENCY;
+    _prev_tick_time = chrono::high_resolution_clock::now();
     _disasm = new DisAsm(_unibus, _cpu->get_instruction_set());
 }
 
@@ -39,8 +43,19 @@ PDPMachine::~PDPMachine() {
     delete _memory;
 }
 
-void PDPMachine::execute_command() {
-    _unibus->master_device_execute();
+void PDPMachine::execute_command(bool step) {
+    if (step) {
+        _unibus->master_device_execute();
+    } else {
+        chrono::high_resolution_clock::time_point t = chrono::high_resolution_clock::now();
+        double dt = chrono::duration_cast<chrono::duration<double>>(t - _prev_tick_time).count();
+        _emulated_ticks -= _ticks_per_second * dt;
+        while (_emulated_ticks <= 0) {
+            _unibus->master_device_execute();
+            _emulated_ticks++;
+        }
+        _prev_tick_time = t;
+    }
 }
 
 uint16 PDPMachine::get_memory_word(uint18 address) {
@@ -52,6 +67,7 @@ CPUState PDPMachine::get_cpu_state() {
     for (int i = 0; i < 8; i++)
         state.r[i] = _cpu->get_register(i).r;
     state.psw = _cpu->get_psw().ps;
+    state.current_operation_address = _cpu->get_current_execution_address();
     return state;
 }
 
@@ -67,5 +83,5 @@ void PDPMachine::key_pressed(uint keycode, bool key_down) {
 }
 
 void PDPMachine::reset_timer() {
-    _cpu->reset_timer();
+    _prev_tick_time = chrono::high_resolution_clock::now();
 }

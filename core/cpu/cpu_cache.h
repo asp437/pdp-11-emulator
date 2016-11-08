@@ -27,6 +27,7 @@ public:
     ~CPUCache();
 
     virtual void register_unibus(Unibus *unibus) { this->_unibus = unibus; };
+    void set_enabled(bool enabled) { _enabled = enabled; }
 
     uint write_word(uint18 address, uint16 value);
     pair<uint16, uint> read_word(uint18 address);

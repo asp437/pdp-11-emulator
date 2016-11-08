@@ -114,7 +114,7 @@ void MainWindow::on_run_button_clicked() {
 void MainWindow::on_step_button_clicked() {
     _clock_timer->stop();
     if (_pdp_machine != nullptr) {
-        _pdp_machine->execute_command();
+        _pdp_machine->execute_command(true);
         update_cpu_registers_view();
         on_jump_to_mem_edit_returnPressed();
     }
@@ -196,7 +196,7 @@ void MainWindow::update_cpu_registers_view() {
     cpu_state_view->addObject(std::make_pair("N", (cpu_state.psw >> 3) & 1));
     _ui->cpu_state_table->setModel(cpu_state_view);
 
-    _diasm_table_view->setCurrentAddress(cpu_state.r[7]);
+    _diasm_table_view->setCurrentAddress(cpu_state.current_operation_address);
     _ui->disasm_table->setFocus();
 }
 
