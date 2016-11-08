@@ -86,6 +86,7 @@ struct PipelinedInstruction {
     int8 branch_offset;
     uint8 cco_flags;
     uint8 register_index;
+    uint total_time;
 };
 
 const uint16 SINGLE_OPERAND_INSTRUCTION_MASK = (const uint16) 0177700;
@@ -142,7 +143,7 @@ private:
                               bool writes_result,
                               void(CPU::*opcode_f)(PipelinedInstruction &),
                               bool byte_wide = false,
-                              uint8 time = 3);
+                              uint8 time = 2);
 
     pair<bool, uint> calculate_operand_address_pipeline(PipelinedInstruction &pipeline_stage, bool src_operand);
     void reset_pipeline_before(int stage);
@@ -265,7 +266,6 @@ private:
     };
 
     PSW _psw;
-    int16 _pc_step; // In bytes
     bool _waiting;
     bool _halted;
 
@@ -274,7 +274,12 @@ private:
     bool _delayed_interrupt;
     uint16 _delayed_interrupt_vector;
     uint16 _delayed_interrupt_next_address;
+
     uint64 _ticks;
+    uint64 _intructions_processed;
+    uint64 _pipeline_resets;
+    uint64 _pipeline_less_ticks;
+
     CPUCache *_cache;
     PipelinedInstruction _pipeline_stages[PS_PIPELINE_LENGTH];
     int _memory_block;
