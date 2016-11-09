@@ -85,6 +85,7 @@ public:
         disasm_table->setLayoutDirection(Qt::LeftToRight);
         disasm_table->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         disasm_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+//        disasm_table->setEditTriggers(QAbstractItemView::AllEditTriggers);
         disasm_table->setSelectionMode(QAbstractItemView::SingleSelection);
         disasm_table->setSelectionBehavior(QAbstractItemView::SelectRows);
         disasm_table->horizontalHeader()->setDefaultSectionSize(80);

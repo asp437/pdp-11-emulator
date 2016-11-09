@@ -114,7 +114,7 @@ void MainWindow::on_run_button_clicked() {
 void MainWindow::on_step_button_clicked() {
     _clock_timer->stop();
     if (_pdp_machine != nullptr) {
-        _pdp_machine->execute_command(true);
+        _pdp_machine->execute(_diasm_table_view->getBreakpointsList(), true);
         update_cpu_registers_view();
         on_jump_to_mem_edit_returnPressed();
     }
@@ -133,7 +133,13 @@ void MainWindow::on_reset_button_clicked() {
 
 void MainWindow::clock_update() {
     if (_pdp_machine != nullptr) {
-        _pdp_machine->execute_command();
+        bool cont = _pdp_machine->execute(_diasm_table_view->getBreakpointsList());
+        if (!cont) {
+            std::cout << "Breakpoint at " << std::oct << _pdp_machine->get_cpu_state().current_operation_address << std::endl;
+            _clock_timer->stop();
+            update_cpu_registers_view();
+            on_jump_to_mem_edit_returnPressed();
+        }
         if (_pdp_machine->is_halted()) {
             std::cout << "PDP Machine halted" << std::endl;
             _clock_timer->stop();
@@ -155,7 +161,8 @@ void MainWindow::on_jump_to_disasm_edit_returnPressed() {
     std::vector<pair<string, uint16>> disasm_result = _pdp_machine->get_disasm(offset, 256);
     _diasm_table_view->setObjects(offset, disasm_result);
     _ui->disasm_table->setModel(_diasm_table_view);
-    _ui->disasm_table->setColumnWidth(1, 230);
+    _ui->disasm_table->setColumnWidth(0, 25);
+    _ui->disasm_table->setColumnWidth(2, 205);
     _ui->disasm_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     _ui->disasm_table->horizontalHeader()->setSectionsClickable(false);
     _ui->disasm_table->setFocus();

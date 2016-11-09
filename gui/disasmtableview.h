@@ -23,13 +23,17 @@ public:
     QModelIndex parent(const QModelIndex &index) const Q_DECL_OVERRIDE;
     int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     int columnCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) Q_DECL_OVERRIDE;
+    bool isBreakpointAddreess(uint16 address);
+    vector<uint16> getBreakpointsList();
 
     void setCurrentAddress(uint16 current_address) { _current_address = current_address; }
-    void setObjects(uint base_address, std::vector<std::pair<std::string, uint16>> &rows);
+    void setObjects(uint16 base_address, std::vector<std::pair<std::string, uint16>> &rows);
 private:
-    std::vector<std::pair<uint, std::pair<std::string, uint16>>> _rows;
+    std::vector<std::pair<uint16, std::pair<std::string, uint16>>> _rows;
     int _selected_row;
     uint16 _current_address;
+    vector<bool> _checks;
 };
 
 #endif // DISASMTABLEVIEW_H

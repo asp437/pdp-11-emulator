@@ -30,7 +30,7 @@ public:
     PDPMachine(string rom_file);
     ~PDPMachine();
 
-    void execute_command(bool step = false);
+    bool execute(vector<uint16> breakpoints, bool step = false);
     uint16 get_memory_word(uint18 address);
     CPUState get_cpu_state();
     PDPDisplayAdapter *get_display_adapter() { return _display_adapter; }

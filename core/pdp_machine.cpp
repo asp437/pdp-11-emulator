@@ -43,7 +43,7 @@ PDPMachine::~PDPMachine() {
     delete _memory;
 }
 
-void PDPMachine::execute_command(bool step) {
+bool PDPMachine::execute(vector<uint16> breakpoints, bool step) {
     if (step) {
         _unibus->master_device_execute();
     } else {
@@ -52,10 +52,18 @@ void PDPMachine::execute_command(bool step) {
         _emulated_ticks -= _ticks_per_second * dt;
         while (_emulated_ticks <= 0) {
             _unibus->master_device_execute();
+            uint16 actual_pc = _cpu->get_current_execution_address();
+            for (auto it = breakpoints.begin(); it != breakpoints.end(); ++it)
+                if (*it == actual_pc) {
+                    _emulated_ticks = 0;
+                    _prev_tick_time = t;
+                    return false;
+                }
             _emulated_ticks++;
         }
         _prev_tick_time = t;
     }
+    return true;
 }
 
 uint16 PDPMachine::get_memory_word(uint18 address) {
