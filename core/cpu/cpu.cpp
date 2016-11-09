@@ -837,6 +837,7 @@ void CPU::opcode_halt(PipelinedInstruction &instruction) {
 
 void CPU::opcode_wait(PipelinedInstruction &instruction) {
     _waiting = true;
+    reset_pipeline_before(PS_EXECUTING);
 }
 
 void CPU::opcode_reset(PipelinedInstruction &instruction) {
@@ -936,7 +937,7 @@ void CPU::fetch_dst_stage() {
             return;
         }
         if (_pipeline_stages[PS_FETCHING_DST].dst_operand.mode == 0) {
-            if (is_unstable_register(_pipeline_stages[PS_FETCHING_DST].src_operand.register_addr)) {
+            if (is_unstable_register(_pipeline_stages[PS_FETCHING_DST].dst_operand.register_addr)) {
                 _memory_block = PS_PIPELINE_LENGTH;
                 return;
             }
@@ -1289,7 +1290,8 @@ void CPU::reset_pipeline_before(int stage) {
         release_unstable_register(_pipeline_stages[i].id);
         release_unstable_memory(_pipeline_stages[i].id);
     }
-    _memory_block = PS_PIPELINE_LENGTH;
+    if (_memory_block < stage)
+        _memory_block = PS_PIPELINE_LENGTH;
     _pipeline_stages[PS_FETCHING].stage_busy = true;
     _pc.r = _pipeline_stages[stage].address + _pipeline_stages[stage].opcode_size;
     _pipeline_resets++;

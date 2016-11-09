@@ -16,7 +16,6 @@ CPUCache::CPUCache() {
     _enabled = true;
     _cache_misses = 0;
     _cache_hits = 0;
-    // TODO: _cached_segments
     _cached_segments.push_back(make_pair(0, 16 * 1024)); // RAM
     _cached_segments.push_back(make_pair(0140000, 0140000 + 8 * 1024)); // ROM
     cout << "CPU Cache initialization complete. Cache size " << CACHE_SIZE << " lines, Line size " << CACHE_LINE_SIZE << " bytes."
@@ -107,8 +106,8 @@ int CPUCache::read_line(uint18 address) {
     CacheLine line;
     for (int i = 0; i < CACHE_LINE_SIZE; i += 2) {
         uint16 word = _unibus->read_word(base + i);
-        line.data[i] = (uint8) ((word >> 8) & 0xFF);
-        line.data[i + 1] = (uint8) ((word) & 0xFF);
+        line.data[i] = (uint8) ((word) & 0xFF);
+        line.data[i + 1] = (uint8) ((word >> 8) & 0xFF);
     }
     line.time_stamp = _time_counter;
     line.base = base;
@@ -121,7 +120,7 @@ void CPUCache::write_back_line(int line_index) {
     if (!_memory[line_index].dirty)
         return;
     for (int i = 0; i < CACHE_LINE_SIZE; i += 2) {
-        uint16 word = (_memory[line_index].data[i] << 8) | (_memory[line_index].data[i + 1]);
+        uint16 word = (_memory[line_index].data[i + 1] << 8) | (_memory[line_index].data[i]);
         _unibus->write_word(_memory[line_index].base + i, word);
     }
 }
@@ -150,8 +149,8 @@ int CPUCache::find_in_cache(uint18 address) {
 void CPUCache::write_into_line_word(int line_index, uint18 offset, uint16 value) {
     _memory[line_index].time_stamp = _time_counter;
     _time_counter++;
-    _memory[line_index].data[offset] = (uint8) ((value >> 8) & 0xFF);
-    _memory[line_index].data[offset + 1] = (uint8) (value & 0xFF);
+    _memory[line_index].data[offset] = (uint8) (value & 0xFF);
+    _memory[line_index].data[offset + 1] = (uint8) ((value >> 8) & 0xFF);
     _memory[line_index].dirty = true;
 }
 
@@ -166,8 +165,8 @@ uint16 CPUCache::read_from_line_word(int line_index, uint18 offset) {
     _memory[line_index].time_stamp = _time_counter;
     _time_counter++;
     uint16 result;
-    result = _memory[line_index].data[offset] << 8;
-    result |= _memory[line_index].data[offset + 1];
+    result = _memory[line_index].data[offset];
+    result |= _memory[line_index].data[offset + 1] << 8;
     return result;
 }
 

@@ -31,7 +31,7 @@ QVariant DisasmTableView::data(const QModelIndex &index, int role) const {
 
     if (role != Qt::DisplayRole) {
         if (role == Qt::CheckStateRole) {
-            if (index.column() == 0) {
+            if (index.column() == 0 && index.row() < _checks.size()) {
                 return _checks.at(index.row()) ? Qt::Checked : Qt::Unchecked;
             }
         }
