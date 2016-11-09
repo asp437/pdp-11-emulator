@@ -381,23 +381,13 @@ PRINT_SCREEN_CHAR_FUNCTION:
 	# y: SP+4
 	# x: SP+6
 
-	# Save registers R0-R5
-	MOV R0, -(R6)
+	# Save registers R1-R5
 	MOV R1, -(R6)
 	MOV R2, -(R6)
 	MOV R3, -(R6)
 	MOV R4, -(R6)
 	MOV R5, -(R6)
 
-	MOV 14(R6), R2
-	MOV 16(R6), R1
-	MOV 18(R6), R0
-	# line_printed
-	CLR R3
-	# vram_line_offset
-	MOV (FRAME_BUFFER_OFFSET), R4
-	# tmp
-	CLR R5
 	# Variables:
 	# Old Reg value: SP+12
 	# tmp: R5
@@ -405,11 +395,19 @@ PRINT_SCREEN_CHAR_FUNCTION:
 	# line_printed: R3
 	# char_code: R2
 	# y: R1
-	# x: R0
 
-	ASR R0
-	ASR R0
-	ADD R0, R4
+	MOV 12(R6), R2
+	MOV 14(R6), R1
+	# line_printed
+	CLR R3
+	# tmp
+	CLR R5
+
+	# vram_line_offset
+	MOV 16(R6), R4
+	ASR R4
+	ASR R4
+	ADD (FRAME_BUFFER_OFFSET), R4
 	
 
 PRINT_SCREEN_CHAR_H_OFFSET_LOOP:
@@ -444,12 +442,11 @@ PRINT_SCREEN_CHAR_RENDERING_LOOP:
 
 PRINT_SCREEN_CHAR_END:
 
-	# Restore registers R0-R5
+	# Restore registers R1-R5
 	MOV (R6)+, R5
 	MOV (R6)+, R4
 	MOV (R6)+, R3
 	MOV (R6)+, R2
 	MOV (R6)+, R1
-	MOV (R6)+, R0
 
 	RST R7
