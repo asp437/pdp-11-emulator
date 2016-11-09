@@ -47,11 +47,11 @@ int main() {
     char_table[' '] = 94;
 
     std::string hello_message =
-        "Hi. You're using yet another PDP-11 emulator. This emulator Supports few commands. \"halt\" command halts the PDP-11 Machine. \"logo\" command displays logo on the screen. \"help\" command prints this help/greeting message. The pipeline and cache emulation still in testing and could cause some crashes or non-valid results.";
+        "Hi. You're using yet another PDP-11 emulator. This emulator supports few commands. \"halt\" command halts the PDP-11 Machine. \"logo\" command displays logo on the screen. \"help\" command prints this help/greeting message. \"clr\" clears screen content. The pipeline and cache emulation still in testing and could cause some crashes or non-valid results.";
     std::ofstream ofs("msg.bin", std::ios_base::binary | std::ios_base::trunc);
     unsigned short message_size = hello_message.size();
 
-    ofs.write((const char *) &message_size, sizeof(unsigned short));=
+    ofs.write((const char *) &message_size, sizeof(unsigned short));
 
     for (int i = 0; i < hello_message.size(); i++) {
         ofs.put(char_table[hello_message.c_str()[i]]);
