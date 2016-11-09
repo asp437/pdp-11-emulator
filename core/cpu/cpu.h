@@ -155,6 +155,7 @@ private:
     void set_unstable_register(uint register_index, uint64 instruction_id);
     void release_unstable_memory(uint64 instruction_id);
     void release_unstable_register(uint64 instruction_id);
+    void revert_addressing_register_changes(PipelinedInstruction &instruction);
 
     pair<uint16, uint> read_memory_word(uint18 address);
     uint write_memory_word(uint18 address, uint16 value);

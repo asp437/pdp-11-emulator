@@ -1289,6 +1289,7 @@ void CPU::reset_pipeline_before(int stage) {
         _pipeline_stages[i].stage_ticks_left = 0;
         release_unstable_register(_pipeline_stages[i].id);
         release_unstable_memory(_pipeline_stages[i].id);
+        revert_addressing_register_changes(_pipeline_stages[i]);
     }
     if (_memory_block < stage)
         _memory_block = PS_PIPELINE_LENGTH;
@@ -1313,5 +1314,28 @@ void CPU::print_statistics() {
         cout << "Pipeline is " << (pipeline_speedup - 1.0f) * 100.0f << "% faster than CPU without pipeline" << endl;
     } else {
         cout << "Pipeline is " << (1.0f - pipeline_speedup) * 100.0f << "% slower than CPU without pipeline" << endl;
+    }
+}
+
+void CPU::revert_addressing_register_changes(PipelinedInstruction &instruction) {
+    if (instruction.instruction.has_dst && instruction.dst_operand.ready) {
+        // Modes 2 & 3 - Autoincrement
+        if (instruction.dst_operand.mode == 0x2 || instruction.dst_operand.mode == 0x3) {
+            _r[instruction.dst_operand.register_addr].r -= instruction.instruction.byte_wide ? 1 : 2;
+        }
+        // Modes 4 & 5 - Autodecrement
+        if (instruction.dst_operand.mode == 0x4 || instruction.dst_operand.mode == 0x5) {
+            _r[instruction.dst_operand.register_addr].r += instruction.instruction.byte_wide ? 1 : 2;
+        }
+    }
+    if (instruction.instruction.has_src && instruction.src_operand.ready) {
+        // Modes 2 & 3 - Autoincrement
+        if (instruction.src_operand.mode == 0x2 || instruction.src_operand.mode == 0x3) {
+            _r[instruction.src_operand.register_addr].r -= instruction.instruction.byte_wide ? 1 : 2;
+        }
+        // Modes 4 & 5 - Autodecrement
+        if (instruction.src_operand.mode == 0x4 || instruction.src_operand.mode == 0x5) {
+            _r[instruction.src_operand.register_addr].r += instruction.instruction.byte_wide ? 1 : 2;
+        }
     }
 }
