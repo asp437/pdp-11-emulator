@@ -10,85 +10,85 @@
 
 CPU::CPU() {
     // Single Operand Instructions
-    register_instruction("CLR", SINGLE_OPERAND_INSTRUCTION_MASK, 0005000, false, true, true, &CPU::opcode_clr, false);
-    register_instruction("CLRB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105000, false, true, true, &CPU::opcode_clrb, true);
-    register_instruction("COM", SINGLE_OPERAND_INSTRUCTION_MASK, 0005100, false, true, true, &CPU::opcode_com, false);
-    register_instruction("COMB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105100, false, true, true, &CPU::opcode_comb, true);
-    register_instruction("INC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005200, false, true, true, &CPU::opcode_inc, false);
-    register_instruction("INCB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105200, false, true, true, &CPU::opcode_incb, true);
-    register_instruction("DEC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005300, false, true, true, &CPU::opcode_dec, false);
-    register_instruction("DECB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105300, false, true, true, &CPU::opcode_decb, true);
-    register_instruction("NEG", SINGLE_OPERAND_INSTRUCTION_MASK, 0005400, false, true, true, &CPU::opcode_neg, false);
-    register_instruction("NEGB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105400, false, true, true, &CPU::opcode_negb, true);
-    register_instruction("TST", SINGLE_OPERAND_INSTRUCTION_MASK, 0005700, false, true, false, &CPU::opcode_tst, false);
-    register_instruction("TSTB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105700, false, true, false, &CPU::opcode_tstb, true);
-    register_instruction("ASR", SINGLE_OPERAND_INSTRUCTION_MASK, 0006200, false, true, true, &CPU::opcode_asr, false);
-    register_instruction("ASRB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106200, false, true, true, &CPU::opcode_asrb, true);
-    register_instruction("ASL", SINGLE_OPERAND_INSTRUCTION_MASK, 0006300, false, true, true, &CPU::opcode_asl, false);
-    register_instruction("ASLB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106300, false, true, true, &CPU::opcode_aslb, true);
-    register_instruction("ROR", SINGLE_OPERAND_INSTRUCTION_MASK, 0006000, false, true, true, &CPU::opcode_ror, false);
-    register_instruction("RORB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106000, false, true, true, &CPU::opcode_rorb, true);
-    register_instruction("ROL", SINGLE_OPERAND_INSTRUCTION_MASK, 0006100, false, true, true, &CPU::opcode_rol, false);
-    register_instruction("ROLB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106100, false, true, true, &CPU::opcode_rolb, true);
-    register_instruction("SWAB", SINGLE_OPERAND_INSTRUCTION_MASK, 0000300, false, true, true, &CPU::opcode_swab, false);
-    register_instruction("ADC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005500, false, true, true, &CPU::opcode_adc, false);
-    register_instruction("ADCB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105500, false, true, true, &CPU::opcode_adcb, true);
-    register_instruction("SBC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005600, false, true, true, &CPU::opcode_sbc, false);
-    register_instruction("SBCB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105600, false, true, true, &CPU::opcode_sbcb, true);
-    register_instruction("SXT", SINGLE_OPERAND_INSTRUCTION_MASK, 0006700, false, true, true, &CPU::opcode_sxt, false);
+    register_instruction("CLR", SINGLE_OPERAND_INSTRUCTION_MASK, 0005000, false, true, true, &CPU::opcode_clr, false, 1);
+    register_instruction("CLRB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105000, false, true, true, &CPU::opcode_clrb, true, 1);
+    register_instruction("COM", SINGLE_OPERAND_INSTRUCTION_MASK, 0005100, false, true, true, &CPU::opcode_com, false, 1);
+    register_instruction("COMB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105100, false, true, true, &CPU::opcode_comb, true, 1);
+    register_instruction("INC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005200, false, true, true, &CPU::opcode_inc, false, 1);
+    register_instruction("INCB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105200, false, true, true, &CPU::opcode_incb, true, 1);
+    register_instruction("DEC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005300, false, true, true, &CPU::opcode_dec, false, 1);
+    register_instruction("DECB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105300, false, true, true, &CPU::opcode_decb, true, 1);
+    register_instruction("NEG", SINGLE_OPERAND_INSTRUCTION_MASK, 0005400, false, true, true, &CPU::opcode_neg, false, 1);
+    register_instruction("NEGB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105400, false, true, true, &CPU::opcode_negb, true, 1);
+    register_instruction("TST", SINGLE_OPERAND_INSTRUCTION_MASK, 0005700, false, true, false, &CPU::opcode_tst, false, 1);
+    register_instruction("TSTB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105700, false, true, false, &CPU::opcode_tstb, true, 1);
+    register_instruction("ASR", SINGLE_OPERAND_INSTRUCTION_MASK, 0006200, false, true, true, &CPU::opcode_asr, false, 2);
+    register_instruction("ASRB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106200, false, true, true, &CPU::opcode_asrb, true, 2);
+    register_instruction("ASL", SINGLE_OPERAND_INSTRUCTION_MASK, 0006300, false, true, true, &CPU::opcode_asl, false, 2);
+    register_instruction("ASLB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106300, false, true, true, &CPU::opcode_aslb, true, 2);
+    register_instruction("ROR", SINGLE_OPERAND_INSTRUCTION_MASK, 0006000, false, true, true, &CPU::opcode_ror, false, 2);
+    register_instruction("RORB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106000, false, true, true, &CPU::opcode_rorb, true, 2);
+    register_instruction("ROL", SINGLE_OPERAND_INSTRUCTION_MASK, 0006100, false, true, true, &CPU::opcode_rol, false, 2);
+    register_instruction("ROLB", SINGLE_OPERAND_INSTRUCTION_MASK, 0106100, false, true, true, &CPU::opcode_rolb, true, 2);
+    register_instruction("SWAB", SINGLE_OPERAND_INSTRUCTION_MASK, 0000300, false, true, true, &CPU::opcode_swab, false, 2);
+    register_instruction("ADC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005500, false, true, true, &CPU::opcode_adc, false, 2);
+    register_instruction("ADCB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105500, false, true, true, &CPU::opcode_adcb, true, 2);
+    register_instruction("SBC", SINGLE_OPERAND_INSTRUCTION_MASK, 0005600, false, true, true, &CPU::opcode_sbc, false, 2);
+    register_instruction("SBCB", SINGLE_OPERAND_INSTRUCTION_MASK, 0105600, false, true, true, &CPU::opcode_sbcb, true, 2);
+    register_instruction("SXT", SINGLE_OPERAND_INSTRUCTION_MASK, 0006700, false, true, true, &CPU::opcode_sxt, false, 2);
 
     // Double Operand Instructions
-    register_instruction("MOV", DOUBLE_OPERAND_INSTRUCTION_MASK, 0010000, true, true, true, &CPU::opcode_mov, false);
-    register_instruction("MOVB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0110000, true, true, true, &CPU::opcode_movb, true);
-    register_instruction("CMP", DOUBLE_OPERAND_INSTRUCTION_MASK, 0020000, true, true, false, &CPU::opcode_cmp, false);
-    register_instruction("CMPB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0120000, true, true, false, &CPU::opcode_cmpb, true);
-    register_instruction("ADD", DOUBLE_OPERAND_INSTRUCTION_MASK, 0060000, true, true, true, &CPU::opcode_add, false);
-    register_instruction("SUB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0160000, true, true, true, &CPU::opcode_sub, false);
-    register_instruction("BIT", DOUBLE_OPERAND_INSTRUCTION_MASK, 0030000, true, true, false, &CPU::opcode_bit, false);
-    register_instruction("BITB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0130000, true, true, false, &CPU::opcode_bitb, true);
-    register_instruction("BIC", DOUBLE_OPERAND_INSTRUCTION_MASK, 0040000, true, true, true, &CPU::opcode_bic, false);
-    register_instruction("BICB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0140000, true, true, true, &CPU::opcode_bicb, true);
-    register_instruction("BIS", DOUBLE_OPERAND_INSTRUCTION_MASK, 0050000, true, true, true, &CPU::opcode_bis, false);
-    register_instruction("BISB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0150000, true, true, true, &CPU::opcode_bisb, true);
-    register_instruction("XOR", REGISTER_OPERAND_INSTRUCTION_MASK, 0074000, false, true, true, &CPU::opcode_xor, false);
+    register_instruction("MOV", DOUBLE_OPERAND_INSTRUCTION_MASK, 0010000, true, true, true, &CPU::opcode_mov, false, 2);
+    register_instruction("MOVB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0110000, true, true, true, &CPU::opcode_movb, true, 2);
+    register_instruction("CMP", DOUBLE_OPERAND_INSTRUCTION_MASK, 0020000, true, true, false, &CPU::opcode_cmp, false, 2);
+    register_instruction("CMPB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0120000, true, true, false, &CPU::opcode_cmpb, true, 2);
+    register_instruction("ADD", DOUBLE_OPERAND_INSTRUCTION_MASK, 0060000, true, true, true, &CPU::opcode_add, false, 3);
+    register_instruction("SUB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0160000, true, true, true, &CPU::opcode_sub, false, 3);
+    register_instruction("BIT", DOUBLE_OPERAND_INSTRUCTION_MASK, 0030000, true, true, false, &CPU::opcode_bit, false, 2);
+    register_instruction("BITB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0130000, true, true, false, &CPU::opcode_bitb, true, 2);
+    register_instruction("BIC", DOUBLE_OPERAND_INSTRUCTION_MASK, 0040000, true, true, true, &CPU::opcode_bic, false, 3);
+    register_instruction("BICB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0140000, true, true, true, &CPU::opcode_bicb, true, 3);
+    register_instruction("BIS", DOUBLE_OPERAND_INSTRUCTION_MASK, 0050000, true, true, true, &CPU::opcode_bis, false, 3);
+    register_instruction("BISB", DOUBLE_OPERAND_INSTRUCTION_MASK, 0150000, true, true, true, &CPU::opcode_bisb, true, 3);
+    register_instruction("XOR", REGISTER_OPERAND_INSTRUCTION_MASK, 0074000, false, true, true, &CPU::opcode_xor, false, 3);
 
     // Program Control Instructions
-    register_instruction("BR", BRANCHING_OFFSET_INSTRUCTION_MASK, 0000400, false, false, false, &CPU::opcode_br, false);
-    register_instruction("BNE", BRANCHING_OFFSET_INSTRUCTION_MASK, 0001000, false, false, false, &CPU::opcode_bne, false);
-    register_instruction("BEQ", BRANCHING_OFFSET_INSTRUCTION_MASK, 0001400, false, false, false, &CPU::opcode_beq, false);
-    register_instruction("BPL", BRANCHING_OFFSET_INSTRUCTION_MASK, 0100000, false, false, false, &CPU::opcode_bpl, false);
-    register_instruction("BMI", BRANCHING_OFFSET_INSTRUCTION_MASK, 0100400, false, false, false, &CPU::opcode_bmi, false);
-    register_instruction("BVC", BRANCHING_OFFSET_INSTRUCTION_MASK, 0102000, false, false, false, &CPU::opcode_bvc, false);
-    register_instruction("BVS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0102400, false, false, false, &CPU::opcode_bvs, false);
-    register_instruction("BCC", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103000, false, false, false, &CPU::opcode_bcc, false);
-    register_instruction("BCS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103400, false, false, false, &CPU::opcode_bcs, false);
-    register_instruction("BGE", BRANCHING_OFFSET_INSTRUCTION_MASK, 0002000, false, false, false, &CPU::opcode_bge, false);
-    register_instruction("BLT", BRANCHING_OFFSET_INSTRUCTION_MASK, 0002400, false, false, false, &CPU::opcode_blt, false);
-    register_instruction("BGT", BRANCHING_OFFSET_INSTRUCTION_MASK, 0003000, false, false, false, &CPU::opcode_bgt, false);
-    register_instruction("BLE", BRANCHING_OFFSET_INSTRUCTION_MASK, 0003400, false, false, false, &CPU::opcode_ble, false);
-    register_instruction("BHI", BRANCHING_OFFSET_INSTRUCTION_MASK, 0101000, false, false, false, &CPU::opcode_bhi, false);
-    register_instruction("BLOS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0101400, false, false, false, &CPU::opcode_blos, false);
-    register_instruction("BHIS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103000, false, false, false, &CPU::opcode_bhis, false);
-    register_instruction("BLO", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103400, false, false, false, &CPU::opcode_blo, false);
-    register_instruction("JMP", SINGLE_OPERAND_INSTRUCTION_MASK, 0000100, false, true, false, &CPU::opcode_jmp, false);
+    register_instruction("BR", BRANCHING_OFFSET_INSTRUCTION_MASK, 0000400, false, false, false, &CPU::opcode_br, false, 2);
+    register_instruction("BNE", BRANCHING_OFFSET_INSTRUCTION_MASK, 0001000, false, false, false, &CPU::opcode_bne, false, 1);
+    register_instruction("BEQ", BRANCHING_OFFSET_INSTRUCTION_MASK, 0001400, false, false, false, &CPU::opcode_beq, false, 1);
+    register_instruction("BPL", BRANCHING_OFFSET_INSTRUCTION_MASK, 0100000, false, false, false, &CPU::opcode_bpl, false, 1);
+    register_instruction("BMI", BRANCHING_OFFSET_INSTRUCTION_MASK, 0100400, false, false, false, &CPU::opcode_bmi, false, 1);
+    register_instruction("BVC", BRANCHING_OFFSET_INSTRUCTION_MASK, 0102000, false, false, false, &CPU::opcode_bvc, false, 1);
+    register_instruction("BVS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0102400, false, false, false, &CPU::opcode_bvs, false, 1);
+    register_instruction("BCC", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103000, false, false, false, &CPU::opcode_bcc, false, 1);
+    register_instruction("BCS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103400, false, false, false, &CPU::opcode_bcs, false, 1);
+    register_instruction("BGE", BRANCHING_OFFSET_INSTRUCTION_MASK, 0002000, false, false, false, &CPU::opcode_bge, false, 1);
+    register_instruction("BLT", BRANCHING_OFFSET_INSTRUCTION_MASK, 0002400, false, false, false, &CPU::opcode_blt, false, 1);
+    register_instruction("BGT", BRANCHING_OFFSET_INSTRUCTION_MASK, 0003000, false, false, false, &CPU::opcode_bgt, false, 1);
+    register_instruction("BLE", BRANCHING_OFFSET_INSTRUCTION_MASK, 0003400, false, false, false, &CPU::opcode_ble, false, 1);
+    register_instruction("BHI", BRANCHING_OFFSET_INSTRUCTION_MASK, 0101000, false, false, false, &CPU::opcode_bhi, false, 1);
+    register_instruction("BLOS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0101400, false, false, false, &CPU::opcode_blos, false, 1);
+    register_instruction("BHIS", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103000, false, false, false, &CPU::opcode_bhis, false, 1);
+    register_instruction("BLO", BRANCHING_OFFSET_INSTRUCTION_MASK, 0103400, false, false, false, &CPU::opcode_blo, false, 1);
+    register_instruction("JMP", SINGLE_OPERAND_INSTRUCTION_MASK, 0000100, false, true, false, &CPU::opcode_jmp, false, 1);
 
     // Subroutine Instructions
-    register_instruction("JSR", REGISTER_OPERAND_INSTRUCTION_MASK, 0004000, false, true, false, &CPU::opcode_jsr, false);
-    register_instruction("RTS", REGISTER_ONLY_INSTRUCTION_MASK, 0000200, false, false, false, &CPU::opcode_rts, false);
-//    register_instruction("MARK", SINGLE_OPERAND_INSTRUCTION_MASK, 0006400, false, false, false, &CPU::opcode_mark, false);
-    register_instruction("SOB", REGISTER_OPERAND_INSTRUCTION_MASK, 0077000, false, false, false, &CPU::opcode_sob, false);
-    register_instruction("EMT", BRANCHING_OFFSET_INSTRUCTION_MASK, 0104000, false, false, false, &CPU::opcode_emt, false);
-    register_instruction("TRAP", BRANCHING_OFFSET_INSTRUCTION_MASK, 0104400, false, false, false, &CPU::opcode_trap, false);
-    register_instruction("BPT", NO_OPERANDS_INSTRUCTION_MASK, 0000003, false, false, false, &CPU::opcode_bpt, false);
-    register_instruction("IOT", NO_OPERANDS_INSTRUCTION_MASK, 0000004, false, false, false, &CPU::opcode_iot, false);
-    register_instruction("RTI", NO_OPERANDS_INSTRUCTION_MASK, 0000002, false, false, false, &CPU::opcode_rti, false);
-    register_instruction("RTT", NO_OPERANDS_INSTRUCTION_MASK, 0000006, false, false, false, &CPU::opcode_rtt, false);
+    register_instruction("JSR", REGISTER_OPERAND_INSTRUCTION_MASK, 0004000, false, true, false, &CPU::opcode_jsr, false, 3);
+    register_instruction("RTS", REGISTER_ONLY_INSTRUCTION_MASK, 0000200, false, false, false, &CPU::opcode_rts, false, 4);
+//    register_instruction("MARK", SINGLE_OPERAND_INSTRUCTION_MASK, 0006400, false, false, false, &CPU::opcode_mark, false, 2);
+    register_instruction("SOB", REGISTER_OPERAND_INSTRUCTION_MASK, 0077000, false, false, false, &CPU::opcode_sob, false, 3);
+    register_instruction("EMT", BRANCHING_OFFSET_INSTRUCTION_MASK, 0104000, false, false, false, &CPU::opcode_emt, false, 3);
+    register_instruction("TRAP", BRANCHING_OFFSET_INSTRUCTION_MASK, 0104400, false, false, false, &CPU::opcode_trap, false, 3);
+    register_instruction("BPT", NO_OPERANDS_INSTRUCTION_MASK, 0000003, false, false, false, &CPU::opcode_bpt, false, 3);
+    register_instruction("IOT", NO_OPERANDS_INSTRUCTION_MASK, 0000004, false, false, false, &CPU::opcode_iot, false, 3);
+    register_instruction("RTI", NO_OPERANDS_INSTRUCTION_MASK, 0000002, false, false, false, &CPU::opcode_rti, false, 5);
+    register_instruction("RTT", NO_OPERANDS_INSTRUCTION_MASK, 0000006, false, false, false, &CPU::opcode_rtt, false, 5);
 
     // Miscellaneous Instructions
-    register_instruction("HALT", NO_OPERANDS_INSTRUCTION_MASK, 0000000, false, false, false, &CPU::opcode_halt, false);
-    register_instruction("WAIT", NO_OPERANDS_INSTRUCTION_MASK, 0000001, false, false, false, &CPU::opcode_wait, false);
-    register_instruction("RESET", NO_OPERANDS_INSTRUCTION_MASK, 0000005, false, false, false, &CPU::opcode_reset, false);
-    register_instruction("CCO", CONDITION_CODE_INSTRUCTION_MASK, 0000240, false, false, false, &CPU::opcode_cco, false);
+    register_instruction("HALT", NO_OPERANDS_INSTRUCTION_MASK, 0000000, false, false, false, &CPU::opcode_halt, false, 1);
+    register_instruction("WAIT", NO_OPERANDS_INSTRUCTION_MASK, 0000001, false, false, false, &CPU::opcode_wait, false, 1);
+    register_instruction("RESET", NO_OPERANDS_INSTRUCTION_MASK, 0000005, false, false, false, &CPU::opcode_reset, false, 1);
+    register_instruction("CCO", CONDITION_CODE_INSTRUCTION_MASK, 0000240, false, false, false, &CPU::opcode_cco, false, 2);
 
     _waiting = false;
     _halted = false;
@@ -644,6 +644,7 @@ void CPU::opcode_bne(PipelinedInstruction &instruction) {
     if (_psw.Z == 0) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -651,6 +652,7 @@ void CPU::opcode_beq(PipelinedInstruction &instruction) {
     if (_psw.Z == 1) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -658,6 +660,7 @@ void CPU::opcode_bpl(PipelinedInstruction &instruction) {
     if (_psw.N == 0) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -665,6 +668,7 @@ void CPU::opcode_bmi(PipelinedInstruction &instruction) {
     if (_psw.N == 1) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -672,6 +676,7 @@ void CPU::opcode_bvc(PipelinedInstruction &instruction) {
     if (_psw.V == 0) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -679,6 +684,7 @@ void CPU::opcode_bvs(PipelinedInstruction &instruction) {
     if (_psw.V == 1) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -686,6 +692,7 @@ void CPU::opcode_bcc(PipelinedInstruction &instruction) {
     if (_psw.C == 0) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -693,6 +700,7 @@ void CPU::opcode_bcs(PipelinedInstruction &instruction) {
     if (_psw.C == 1) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -700,6 +708,7 @@ void CPU::opcode_bge(PipelinedInstruction &instruction) {
     if (_psw.V == _psw.N) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -707,6 +716,7 @@ void CPU::opcode_blt(PipelinedInstruction &instruction) {
     if ((_psw.V ^ _psw.N) == 1) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -714,6 +724,7 @@ void CPU::opcode_bgt(PipelinedInstruction &instruction) {
     if (_psw.V == _psw.N && _psw.Z == 0) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -721,6 +732,7 @@ void CPU::opcode_ble(PipelinedInstruction &instruction) {
     if ((_psw.V ^ _psw.N) == 1 && _psw.Z == 0) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -728,6 +740,7 @@ void CPU::opcode_bhi(PipelinedInstruction &instruction) {
     if (_psw.C == 0 && _psw.Z == 0) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -735,6 +748,7 @@ void CPU::opcode_blos(PipelinedInstruction &instruction) {
     if (_psw.C == 1 || _psw.Z == 1) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -742,6 +756,7 @@ void CPU::opcode_bhis(PipelinedInstruction &instruction) {
     if (_psw.C == 0) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -749,6 +764,7 @@ void CPU::opcode_blo(PipelinedInstruction &instruction) {
     if (_psw.C == 1) {
         reset_pipeline_before(PS_EXECUTING);
         _pc.r = (uint16) (instruction.address + 2 + (instruction.branch_offset << 1));
+        instruction.instruction.time *= 2;
     }
 }
 
@@ -816,22 +832,7 @@ void CPU::opcode_rtt(PipelinedInstruction &instruction) {
 
 void CPU::opcode_halt(PipelinedInstruction &instruction) {
     _halted = true;
-    cout << "Total ticks: " << _ticks << ", instructions processed: " << _intructions_processed << endl;
-    cout << "Efficiency: " << 1.0f * _intructions_processed / _ticks << " instructions/tick, ";
-    cout << 1.0f * _ticks / _intructions_processed << " tick's per instruction" << endl;
-
-    cout << "Estimated ticks without pipeline: " << _pipeline_less_ticks << endl;
-    cout << "Estimated efficiency without pipeline: " << 1.0f * _intructions_processed / _pipeline_less_ticks
-         << " instructions/tick, ";
-    cout << 1.0f * _pipeline_less_ticks / _intructions_processed << " tick's per instruction" << endl;
-
-    cout << "Pipeline resets: " << _pipeline_resets << ", " << 100.0f * _pipeline_resets / _ticks << "% of ticks" << endl;
-    double pipeline_speedup = (1.0f * _intructions_processed / _ticks) / (1.0f * _intructions_processed / _pipeline_less_ticks);
-    if (pipeline_speedup > 1.0f) {
-        cout << "Pipeline is " << (pipeline_speedup - 1.0f) * 100.0f << "% faster than CPU without pipeline" << endl;
-    } else {
-        cout << "Pipeline is " << (1.0f - pipeline_speedup) * 100.0f << "% slower than CPU without pipeline" << endl;
-    }
+    print_statistics();
 }
 
 void CPU::opcode_wait(PipelinedInstruction &instruction) {
@@ -1148,7 +1149,7 @@ pair<bool, uint> CPU::calculate_operand_address_pipeline(PipelinedInstruction &p
                 operand.memory_address = _r[operand.register_addr].r;
             }
             _r[operand.register_addr].r += pipeline_stage.instruction.byte_wide ? 1 : 2;
-            latency = REGISTER_ACCESS_LATENCY;
+            latency = REGISTER_ACCESS_LATENCY + 1; // 1 - Increment time
 
             if (operand.register_addr == 07) {
                 pipeline_stage.opcode_size += 2;
@@ -1171,7 +1172,7 @@ pair<bool, uint> CPU::calculate_operand_address_pipeline(PipelinedInstruction &p
             operand.memory_address = mem_read_result.first;
             latency = mem_read_result.second;
             _r[operand.register_addr].r += pipeline_stage.instruction.byte_wide ? 1 : 2;
-            latency += REGISTER_ACCESS_LATENCY;
+            latency += REGISTER_ACCESS_LATENCY + 1; // 1 - Increment time
 
             if (operand.register_addr == 07) {
                 pipeline_stage.opcode_size += 2;
@@ -1187,14 +1188,14 @@ pair<bool, uint> CPU::calculate_operand_address_pipeline(PipelinedInstruction &p
                 return make_pair(false, 0);
             _r[operand.register_addr].r -= pipeline_stage.instruction.byte_wide ? 1 : 2;
             operand.memory_address = this->_r[operand.register_addr].r;
-            latency = REGISTER_ACCESS_LATENCY;
+            latency = REGISTER_ACCESS_LATENCY + 1; // 1 - Decrement time
             break;
         case 5: // Autodecrement Deferred
             if (is_unstable_register(operand.register_addr) || is_unstable_memory(_r[operand.register_addr].r))
                 return make_pair(false, 0);
             _r[operand.register_addr].r -= pipeline_stage.instruction.byte_wide ? 1 : 2;
             mem_read_result = read_memory_word(this->_r[operand.register_addr].r);
-            latency = mem_read_result.second;
+            latency = mem_read_result.second + 1; // 1 - Decrement time
             operand.memory_address = mem_read_result.first;
             latency += REGISTER_ACCESS_LATENCY;
             break;
@@ -1203,6 +1204,7 @@ pair<bool, uint> CPU::calculate_operand_address_pipeline(PipelinedInstruction &p
                 return make_pair(false, 0);
             mem_read_result = read_memory_word(pipeline_stage.address + operand.index_offset);
             latency = mem_read_result.second + REGISTER_ACCESS_LATENCY;
+            latency += 2; // Addition time
             index = mem_read_result.first;
             operand.memory_address = _r[operand.register_addr].r + index;
             pipeline_stage.opcode_size += 2;
@@ -1223,6 +1225,7 @@ pair<bool, uint> CPU::calculate_operand_address_pipeline(PipelinedInstruction &p
                 return make_pair(false, 0);
             mem_read_result = read_memory_word(_r[operand.register_addr].r + index);
             latency += mem_read_result.second;
+            latency += 2; // Addition time
             operand.memory_address = mem_read_result.first;
             pipeline_stage.opcode_size += 2;
             if (src_operand) {
@@ -1290,4 +1293,23 @@ void CPU::reset_pipeline_before(int stage) {
     _pipeline_stages[PS_FETCHING].stage_busy = true;
     _pc.r = _pipeline_stages[stage].address + _pipeline_stages[stage].opcode_size;
     _pipeline_resets++;
+}
+
+void CPU::print_statistics() {
+    cout << "Total ticks: " << _ticks << ", instructions processed: " << _intructions_processed << endl;
+    cout << "Efficiency: " << 1.0f * _intructions_processed / _ticks << " instructions/tick, ";
+    cout << 1.0f * _ticks / _intructions_processed << " tick's per instruction" << endl;
+
+    cout << "Estimated ticks without pipeline: " << _pipeline_less_ticks << endl;
+    cout << "Estimated efficiency without pipeline: " << 1.0f * _intructions_processed / _pipeline_less_ticks
+         << " instructions/tick, ";
+    cout << 1.0f * _pipeline_less_ticks / _intructions_processed << " tick's per instruction" << endl;
+
+    cout << "Pipeline resets: " << _pipeline_resets << ", " << 100.0f * _pipeline_resets / _ticks << "% of ticks" << endl;
+    double pipeline_speedup = (1.0f * _pipeline_less_ticks) / (1.0f * _ticks);
+    if (pipeline_speedup > 1.0f) {
+        cout << "Pipeline is " << (pipeline_speedup - 1.0f) * 100.0f << "% faster than CPU without pipeline" << endl;
+    } else {
+        cout << "Pipeline is " << (1.0f - pipeline_speedup) * 100.0f << "% slower than CPU without pipeline" << endl;
+    }
 }

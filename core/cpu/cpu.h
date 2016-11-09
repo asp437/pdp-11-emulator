@@ -122,6 +122,8 @@ public:
     PSW get_psw() { return _psw; }
     uint16 get_current_execution_address() { return _pipeline_stages[PS_EXECUTING].address; }
 
+    void print_statistics();
+
     static InstructionOperand decode_src_operand(uint16 opcode);
     static InstructionOperand decode_dst_operand(uint16 opcode);
 
