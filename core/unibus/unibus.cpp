@@ -31,7 +31,6 @@ private:
 };
 
 bool Unibus::register_device(UnibusDevice *device, uint18 base_address, uint18 reserve_space_size) {
-    // TODO: Check address spaces intersections
     UnibusDeviceConfiguration
         *device_configuration = new UnibusDeviceConfiguration(device, base_address, reserve_space_size);
     device_configuration->get_device()->register_unibus(this);
@@ -73,8 +72,7 @@ UnibusDeviceConfiguration *Unibus::get_registered_device(uint18 address) {
     return nullptr;
 }
 
-void Unibus::set_init_line() {
-    // TODO: Time synchronization
+void Unibus::reset_bus_devices() {
     for (auto it = _registered_devices.begin(); it != _registered_devices.end(); ++it) {
         (*it)->get_device()->reset();
     }

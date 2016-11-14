@@ -5,14 +5,14 @@
 #ifndef PDP_11_EMULATOR_CPU_CACHE_H
 #define PDP_11_EMULATOR_CPU_CACHE_H
 
-#include <c++/vector>
+#include <vector>
 #include "../../common.h"
 #include "../unibus/unibus.h"
 
-const uint CACHE_LINE_SIZE = 32;
-const uint CACHE_SIZE = 16;
+const uint CACHE_LINE_SIZE = 16; // In bytes
+const uint CACHE_SIZE = 16; // In lines
 const uint CACHE_HIT_TIME = 1;
-const uint CACHE_MISS_TIME = 2;
+const uint MEMORY_ACCESS_TIME = 5;
 
 typedef struct _CACHE_LINE {
     uint8 data[CACHE_LINE_SIZE];

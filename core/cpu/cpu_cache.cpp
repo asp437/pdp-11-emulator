@@ -33,7 +33,7 @@ uint CPUCache::write_word(uint18 address, uint16 value) {
         int line_index = find_in_cache(address);
         if (line_index == -1) {
             line_index = read_line(address);
-            latency = CACHE_MISS_TIME * CACHE_LINE_SIZE;
+            latency = MEMORY_ACCESS_TIME * CACHE_LINE_SIZE;
             _cache_misses++;
         } else {
             _cache_hits++;
@@ -42,7 +42,7 @@ uint CPUCache::write_word(uint18 address, uint16 value) {
         return latency;
     } else {
         _unibus->write_word(address, value);
-        return CACHE_MISS_TIME;
+        return MEMORY_ACCESS_TIME;
     }
 }
 
@@ -52,14 +52,14 @@ pair<uint16, uint> CPUCache::read_word(uint18 address) {
         int line_index = find_in_cache(address);
         if (line_index == -1) {
             line_index = read_line(address);
-            latency = CACHE_MISS_TIME * CACHE_LINE_SIZE;
+            latency = MEMORY_ACCESS_TIME * CACHE_LINE_SIZE;
             _cache_misses++;
         } else {
             _cache_hits++;
         }
         return make_pair(read_from_line_word(line_index, calculate_offset(address)), latency);
     } else {
-        return make_pair(_unibus->read_word(address), CACHE_MISS_TIME);
+        return make_pair(_unibus->read_word(address), MEMORY_ACCESS_TIME);
     }
 }
 
@@ -69,7 +69,7 @@ uint CPUCache::write_byte(uint18 address, uint8 value) {
         int line_index = find_in_cache(address);
         if (line_index == -1) {
             line_index = read_line(address);
-            latency = CACHE_MISS_TIME * CACHE_LINE_SIZE;
+            latency = MEMORY_ACCESS_TIME * CACHE_LINE_SIZE;
             _cache_misses++;
         } else {
             _cache_hits++;
@@ -78,7 +78,7 @@ uint CPUCache::write_byte(uint18 address, uint8 value) {
         return latency;
     } else {
         _unibus->write_byte(address, value);
-        return CACHE_MISS_TIME;
+        return MEMORY_ACCESS_TIME;
     }
 }
 
@@ -88,14 +88,14 @@ pair<uint8, uint> CPUCache::read_byte(uint18 address) {
         int line_index = find_in_cache(address);
         if (line_index == -1) {
             line_index = read_line(address);
-            latency = CACHE_MISS_TIME * CACHE_LINE_SIZE;
+            latency = MEMORY_ACCESS_TIME * CACHE_LINE_SIZE;
             _cache_misses++;
         } else {
             _cache_hits++;
         }
         return make_pair(read_from_line_byte(line_index, calculate_offset(address)), latency);
     } else {
-        return make_pair(_unibus->read_byte(address), CACHE_MISS_TIME);
+        return make_pair(_unibus->read_byte(address), MEMORY_ACCESS_TIME);
     }
 }
 

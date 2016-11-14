@@ -6,17 +6,16 @@
 #define PDP_11_EMULATOR_CPU_H
 
 #include "../../common.h"
+#include "../unibus/unibus.h"
 
 #include <chrono>
-
-#include "../unibus/unibus.h"
 
 const uint OPCODE_DECODING_LATENCY = 1;
 const uint OPERAND_DECODING_LATENCY = 1;
 const uint REGISTER_ACCESS_LATENCY = 1;
-
+const uint INCREMENT_OPERATION_TIME = 3; // Used in addressing modes 2-5
 class CPU;
-class PipelinedInstruction;
+struct PipelinedInstruction;
 class CPUCache;
 
 union PSW {
@@ -55,7 +54,7 @@ struct CPUInstruction {
 struct InstructionOperand {
     uint8 mode;
     uint8 register_addr;
-    uint16 index_offset;
+    uint16 index_offset; // Offset for index in addressing mode 6-7, or as offset in wide opcode for modes 2-5
     uint16 memory_address;
     bool ready;
     int calculation_time;
@@ -68,9 +67,10 @@ typedef enum _PIPELINE_STAGE {
     PS_FETCHING_DST,
     PS_EXECUTING,
     PS_WRITE_BACK,
-    PS_PIPELINE_LENGTH
+    PS_PIPELINE_LENGTH // Also used as not-a-stage value
 } PIPELINE_STAGE;
 
+// Describes Instruction on pipeline stage
 struct PipelinedInstruction {
     uint64 id;
     uint16 address;
@@ -120,6 +120,7 @@ public:
     vector<CPUInstruction> get_instruction_set() { return _instruction_set; }
     Register get_register(int i) { return _r[i]; }
     PSW get_psw() { return _psw; }
+    // Return PC value on PS_EXECUTING stage, not value on PS_FETCHING stage (which is used as primary)
     uint16 get_current_execution_address() { return _pipeline_stages[PS_EXECUTING].address; }
 
     void print_statistics();
@@ -129,6 +130,7 @@ public:
 
     static const uint18 BASE_MEM_MAP_SEGMENT_ADDRESS = 0177700;
     static const uint18 BASE_MEM_MAP_SEGMENT_SIZE = 077;
+    static const uint8 CPU_INTERNAL_INTERRRUPT_PRIORITY = 8; // Maximum priority
 private:
     void write_back_stage();
     void execute_stage();

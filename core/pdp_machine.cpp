@@ -49,7 +49,7 @@ bool PDPMachine::execute(vector<uint16> breakpoints, bool step) {
     } else {
         chrono::high_resolution_clock::time_point t = chrono::high_resolution_clock::now();
         double dt = chrono::duration_cast<chrono::duration<double>>(t - _prev_tick_time).count();
-        _emulated_ticks -= _ticks_per_second * dt;
+        _emulated_ticks -= (int) (_ticks_per_second * dt);
         while (_emulated_ticks <= 0) {
             _unibus->master_device_execute();
             uint16 actual_pc = _cpu->get_current_execution_address();
