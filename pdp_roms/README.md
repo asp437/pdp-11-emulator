@@ -13,3 +13,5 @@ ROM files:
 * `console_echo.bin` - console program which doesn't support any commands.
 * `font_render_test.bin` - 'Hello World' program which display one word on the screen. Example of working with font.
 * `new_video_mode_dma.bin` - Fill the screen with the lines of different colors (supported only 4 colors). Example of working with emulated video-controller via DMA.
+
+All ROM `asm` files were compiled by [modified version](https://github.com/MightMortal/pdp11-asm) of `ovcharik/pdp11-asm` ([Original repository](https://github.com/ovcharik/pdp11-asm)).
